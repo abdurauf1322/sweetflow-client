@@ -183,7 +183,7 @@ export const POSPage = () => {
   };
 
   return (
-    <div className="flex flex-col lg:flex-row gap-2 sm:gap-4 lg:gap-6 p-1.5 sm:p-4 lg:h-[calc(100vh-120px)]">
+    <div className="flex flex-col lg:flex-row gap-2 sm:gap-4 lg:gap-6 p-1.5 sm:p-4 min-h-[100dvh] lg:min-h-0 lg:h-[calc(100vh-120px)] overflow-y-auto lg:overflow-hidden pb-24 lg:pb-4">
       {/* LEFT: Products Panel */}
       <div className="flex-1 w-full lg:w-2/3 flex flex-col space-y-2 sm:space-y-4 min-h-0">
         {/* Search controls */}
@@ -197,7 +197,7 @@ export const POSPage = () => {
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             placeholder="Mahsulot nomi bo'yicha qidirish..."
-            className="w-full pl-11 pr-10 py-2.5 bg-slate-900/90 border border-slate-700/80 rounded-xl text-slate-100 placeholder-slate-400 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition shadow-inner min-h-[40px]"
+            className="w-full pl-11 pr-10 py-3 sm:py-3.5 bg-slate-900/90 border border-slate-700/80 rounded-2xl text-slate-100 placeholder-slate-400 text-sm sm:text-base focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition shadow-inner min-h-[48px]"
           />
           
           {searchQuery && (
@@ -220,7 +220,7 @@ export const POSPage = () => {
                 <div
                   key={product.id}
                   onClick={() => product.stockCount > 0 && addToCart(product)}
-                  className={`glass-panel glass-card-hover rounded-xl sm:rounded-2xl p-2.5 sm:p-4 flex flex-col justify-between cursor-pointer border active:scale-[0.97] transition-transform ${
+                  className={`glass-panel glass-card-hover rounded-2xl sm:rounded-3xl p-3 sm:p-5 flex flex-col justify-between cursor-pointer border active:scale-[0.97] transition-transform ${
                     product.stockCount === 0 
                       ? 'opacity-40 cursor-not-allowed border-red-900/30' 
                       : isLowStock 
@@ -229,27 +229,27 @@ export const POSPage = () => {
                   }`}
                 >
                   {/* Row 1: Name + Category */}
-                  <div className="space-y-0.5 sm:space-y-1 mb-1.5 sm:mb-2">
-                    <h3 className="font-semibold text-white text-xs sm:text-sm line-clamp-1 leading-tight">{product.name}</h3>
-                    <div className="text-[10px] sm:text-xs text-gray-500 flex items-center gap-1 flex-wrap">
-                      <span className="text-gray-400">{product.category?.name || 'Oddiy'}</span>
+                  <div className="space-y-1 mb-2 sm:mb-3">
+                    <h3 className="font-bold text-white text-sm sm:text-base line-clamp-1 leading-tight">{product.name}</h3>
+                    <div className="text-xs sm:text-sm text-gray-400 flex items-center gap-1 flex-wrap">
+                      <span>{product.category?.name || 'Oddiy'}</span>
                       <span className="text-gray-600">·</span>
-                      <span className="text-gray-400">{product.quantityInBox} dona/quti</span>
+                      <span>{product.quantityInBox} dona/quti</span>
                     </div>
                   </div>
 
                   {/* Row 2: Price & Stock - Compact 2-col grid */}
-                  <div className="grid grid-cols-2 gap-x-2 gap-y-0.5 pt-1.5 sm:pt-3 border-t border-white/5 text-[11px] sm:text-xs">
+                  <div className="grid grid-cols-2 gap-x-2 gap-y-1 pt-2 sm:pt-3 border-t border-white/5">
                     <div>
-                      <span className="text-gray-500 block text-[9px] uppercase leading-tight">Dona</span>
-                      <span className="font-bold text-white leading-tight">{Number(product.unitPrice).toLocaleString()} s.</span>
+                      <span className="text-gray-500 block text-[10px] sm:text-xs uppercase leading-tight font-semibold">Dona</span>
+                      <span className="font-bold text-white text-sm sm:text-base leading-tight">{Number(product.unitPrice).toLocaleString()} s.</span>
                     </div>
                     <div className="text-right">
-                      <span className="text-gray-500 block text-[9px] uppercase leading-tight">Quti</span>
-                      <span className="font-bold text-brand-300 leading-tight">{Number(product.boxPrice).toLocaleString()} s.</span>
+                      <span className="text-gray-500 block text-[10px] sm:text-xs uppercase leading-tight font-semibold">Quti</span>
+                      <span className="font-bold text-brand-300 text-sm sm:text-base leading-tight">{Number(product.boxPrice).toLocaleString()} s.</span>
                     </div>
-                    <div className="col-span-2 mt-0.5">
-                      <span className={`font-semibold ${isLowStock ? 'text-yellow-400' : 'text-green-400'} text-[10px] sm:text-xs`}>
+                    <div className="col-span-2 mt-1">
+                      <span className={`font-semibold ${isLowStock ? 'text-yellow-400' : 'text-green-400'} text-xs sm:text-sm`}>
                         {product.stockCount} dona ({Math.floor(product.stockCount / product.quantityInBox)} quti)
                       </span>
                     </div>
@@ -264,14 +264,14 @@ export const POSPage = () => {
       {/* RIGHT: Cart & Billing Invoice Panel */}
       <div className="w-full lg:w-1/3 lg:max-w-md glass-panel rounded-2xl border border-white/5 flex flex-col min-h-0 lg:h-full">
         {/* Store Selector */}
-        <div className="p-3 sm:p-4 border-b border-white/5 space-y-3">
-          <label className="block text-xs font-semibold text-gray-400 uppercase tracking-wider">Do'kon (Hamkor):</label>
+        <div className="p-3 sm:p-5 border-b border-white/5 space-y-3">
+          <label className="block text-xs sm:text-sm font-bold text-gray-400 uppercase tracking-wider">Do'kon (Hamkor):</label>
           <div className="flex items-center space-x-2">
-            <User size={18} className="text-brand-400 shrink-0" />
+            <User size={20} className="text-brand-400 shrink-0" />
             <select
               value={selectedStoreId}
               onChange={(e) => setSelectedStoreId(e.target.value)}
-              className="bg-slate-900 border border-white/10 rounded-xl text-white text-xs sm:text-sm focus:ring-brand-500 focus:border-brand-500 w-full p-2 min-h-[40px]"
+              className="bg-slate-900 border border-white/10 rounded-2xl text-white text-sm sm:text-base focus:ring-brand-500 focus:border-brand-500 w-full p-3 min-h-[48px]"
             >
               <option value="">Hamkorni tanlang...</option>
               {stores.map(store => (
@@ -283,11 +283,11 @@ export const POSPage = () => {
           </div>
 
           {selectedStore && (
-            <div className="grid grid-cols-2 gap-2 text-xs bg-brand-950/20 rounded-xl p-3 border border-brand-500/10">
-              <div className="min-w-0">Egasi: <span className="text-white font-semibold break-words">{selectedStore.ownerName}</span></div>
-              <div className="min-w-0">Tel: <span className="text-white font-mono break-words">{selectedStore.phone}</span></div>
-              <div className="min-w-0">Limit: <span className="text-white font-semibold break-words">{Number(selectedStore.creditLimit).toLocaleString()} s.</span></div>
-              <div className="min-w-0">Nasiya: <span className="text-white font-semibold">{selectedStore.paymentDays} kun</span></div>
+            <div className="grid grid-cols-2 gap-3 text-sm bg-brand-950/30 rounded-2xl p-4 border border-brand-500/10">
+              <div className="min-w-0 text-gray-400">Egasi: <span className="text-white font-bold break-words block">{selectedStore.ownerName}</span></div>
+              <div className="min-w-0 text-gray-400">Tel: <span className="text-white font-mono font-semibold break-words block">{selectedStore.phone}</span></div>
+              <div className="min-w-0 text-gray-400">Limit: <span className="text-white font-bold break-words block">{Number(selectedStore.creditLimit).toLocaleString()} s.</span></div>
+              <div className="min-w-0 text-gray-400">Nasiya: <span className="text-white font-bold block">{selectedStore.paymentDays} kun</span></div>
             </div>
           )}
         </div>
@@ -309,52 +309,52 @@ export const POSPage = () => {
               const price = item.unitType === 'BOX' ? item.boxPrice : item.unitPrice;
               const subtotal = item.quantity * price;
               return (
-                <div key={item.productId} className="glass-card rounded-xl p-3 border border-white/5 space-y-2 w-full overflow-hidden">
+                <div key={item.productId} className="glass-card rounded-2xl p-3.5 sm:p-5 border border-white/5 space-y-3 w-full overflow-hidden">
                   <div className="flex justify-between items-start gap-2">
-                    <span className="font-semibold text-xs sm:text-sm text-white min-w-0 truncate">{item.name}</span>
-                    <button onClick={() => removeFromCart(item.productId)} className="text-red-400 hover:text-red-300 p-0.5 shrink-0">
-                      <Trash2 size={14} />
+                    <span className="font-bold text-sm sm:text-base text-white min-w-0 truncate">{item.name}</span>
+                    <button onClick={() => removeFromCart(item.productId)} className="text-red-400 hover:text-red-300 p-1 shrink-0 bg-red-400/10 rounded-lg">
+                      <Trash2 size={16} />
                     </button>
                   </div>
 
-                  <div className="flex flex-wrap justify-between items-center gap-2 text-xs">
-                    <div className="flex bg-slate-900 rounded-lg p-0.5 border border-white/5">
+                  <div className="flex flex-wrap justify-between items-center gap-3 text-sm">
+                    <div className="flex bg-slate-900 rounded-xl p-1 border border-white/5">
                       <button
                         onClick={() => toggleUnitType(item.productId, 'BOX')}
-                        className={`px-2 py-1 rounded-md flex items-center space-x-1 border text-xs ${item.unitType === 'BOX' ? 'bg-brand-500 text-white font-bold border-brand-400' : 'text-gray-400 border-transparent hover:border-white/10'}`}
+                        className={`px-3 py-1.5 rounded-lg flex items-center space-x-1.5 border text-xs sm:text-sm transition ${item.unitType === 'BOX' ? 'bg-brand-500 text-white font-bold border-brand-400 shadow-md' : 'text-gray-400 border-transparent hover:border-white/10 hover:text-gray-200'}`}
                       >
-                        <Box size={11} />
+                        <Box size={14} />
                         <span>Quti</span>
                       </button>
                       <button
                         onClick={() => toggleUnitType(item.productId, 'PIECE')}
-                        className={`px-2 py-1 rounded-md flex items-center space-x-1 border text-xs ${item.unitType === 'PIECE' ? 'bg-brand-500 text-white font-bold border-brand-400' : 'text-gray-400 border-transparent hover:border-white/10'}`}
+                        className={`px-3 py-1.5 rounded-lg flex items-center space-x-1.5 border text-xs sm:text-sm transition ${item.unitType === 'PIECE' ? 'bg-brand-500 text-white font-bold border-brand-400 shadow-md' : 'text-gray-400 border-transparent hover:border-white/10 hover:text-gray-200'}`}
                       >
-                        <Tag size={11} />
+                        <Tag size={14} />
                         <span>Dona</span>
                       </button>
                     </div>
 
-                    <div className="flex items-center space-x-2">
+                    <div className="flex items-center space-x-3">
                       <button
                         onClick={() => updateCartItemQuantity(item.productId, item.quantity - 1)}
-                        className="bg-slate-800 hover:bg-slate-700 text-white font-bold px-2 py-0.5 rounded border border-white/10 hover:border-white/20 min-h-[28px] min-w-[28px] flex items-center justify-center"
+                        className="bg-slate-800 hover:bg-slate-700 active:bg-slate-600 text-white font-bold px-3 py-1.5 rounded-xl border border-white/10 hover:border-white/20 min-h-[36px] min-w-[36px] flex items-center justify-center transition"
                       >
                         -
                       </button>
-                      <span className="font-mono text-sm text-white">{item.quantity}</span>
+                      <span className="font-mono text-base font-bold text-white w-6 text-center">{item.quantity}</span>
                       <button
                         onClick={() => updateCartItemQuantity(item.productId, item.quantity + 1)}
-                        className="bg-slate-800 hover:bg-slate-700 text-white font-bold px-2 py-0.5 rounded border border-white/10 hover:border-white/20 min-h-[28px] min-w-[28px] flex items-center justify-center"
+                        className="bg-slate-800 hover:bg-slate-700 active:bg-slate-600 text-white font-bold px-3 py-1.5 rounded-xl border border-white/10 hover:border-white/20 min-h-[36px] min-w-[36px] flex items-center justify-center transition"
                       >
                         +
                       </button>
                     </div>
                   </div>
 
-                  <div className="flex justify-between items-center text-xs pt-1 border-t border-white/5 text-gray-400">
+                  <div className="flex justify-between items-center text-sm pt-2 border-t border-white/5 text-gray-400 mt-1">
                     <span>Narxi: {price.toLocaleString()} s.</span>
-                    <span className="font-bold text-white">{subtotal.toLocaleString()} so'm</span>
+                    <span className="font-bold text-white text-base">{subtotal.toLocaleString()} so'm</span>
                   </div>
                 </div>
               );
@@ -363,38 +363,39 @@ export const POSPage = () => {
         </div>
 
         {/* Digital Billing Invoice Checkout Summary */}
-        <div className="p-3 sm:p-4 border-t border-white/5 bg-slate-950/40 space-y-4">
-          <div className="space-y-2">
-            <div className="flex justify-between text-xs sm:text-sm text-gray-400">
+        <div className="p-4 sm:p-5 pb-32 sm:pb-5 border-t border-white/5 bg-slate-950/60 space-y-5 rounded-b-2xl">
+          <div className="space-y-3">
+            <div className="flex justify-between text-sm sm:text-base text-gray-400">
               <span>Jami summa:</span>
-              <span className="font-semibold text-white">{totalAmount.toLocaleString()} so'm</span>
+              <span className="font-bold text-white text-base sm:text-lg">{totalAmount.toLocaleString()} so'm</span>
             </div>
 
-            <div className="flex items-center justify-between text-xs sm:text-sm">
+            <div className="flex items-center justify-between text-sm sm:text-base">
               <span className="text-gray-400">Naqd to'lov:</span>
-              <div className="flex items-center space-x-1 border border-white/10 rounded-lg p-1 bg-slate-900 w-[130px] sm:w-[150px]">
+              <div className="flex items-center space-x-2 border border-white/10 rounded-xl p-1.5 bg-slate-900 w-[140px] sm:w-[160px] focus-within:border-brand-500 focus-within:ring-1 focus-within:ring-brand-500 transition">
                 <input
                   type="number"
-                  className="bg-transparent text-right border-0 p-0 text-xs sm:text-sm text-white focus:ring-0 w-full"
+                  className="bg-transparent text-right border-0 p-1 text-sm sm:text-base font-bold text-white focus:ring-0 w-full"
                   value={paidAmount || ''}
                   onChange={(e) => setPaidAmount(Number(e.target.value))}
+                  placeholder="0"
                 />
-                <span className="text-xs text-gray-500 shrink-0">so'm</span>
+                <span className="text-sm font-semibold text-gray-500 shrink-0 pr-1">so'm</span>
               </div>
             </div>
 
-            <div className="flex justify-between text-xs sm:text-sm font-bold border-t border-white/5 pt-2">
+            <div className="flex justify-between text-sm sm:text-base font-bold border-t border-white/10 pt-3 mt-1">
               <span className="text-brand-300">Nasiya (Qarz):</span>
-              <span className="text-brand-400">{debtAmount.toLocaleString()} so'm</span>
+              <span className="text-brand-400 text-base sm:text-lg">{debtAmount.toLocaleString()} so'm</span>
             </div>
           </div>
 
           <button
             onClick={handleCheckout}
             disabled={cart.length === 0 || checkoutLoading}
-            className="w-full bg-brand-500 hover:bg-brand-600 disabled:opacity-40 text-white py-3 rounded-xl font-bold transition flex items-center justify-center space-x-2 text-xs sm:text-sm border border-brand-400 shadow-lg shadow-brand-500/10 hover:shadow-brand-500/20 cursor-pointer min-h-[44px]"
+            className="w-full bg-brand-500 hover:bg-brand-600 disabled:opacity-40 text-white py-3.5 sm:py-4 rounded-2xl font-bold transition flex items-center justify-center space-x-2 text-sm sm:text-base border border-brand-400 shadow-lg shadow-brand-500/10 hover:shadow-brand-500/20 cursor-pointer min-h-[52px]"
           >
-            <CreditCard size={18} />
+            <CreditCard size={20} />
             <span>{checkoutLoading ? 'Rasmiylashtirilmoqda...' : 'Yuk xati rasmiylashtirish'}</span>
           </button>
         </div>

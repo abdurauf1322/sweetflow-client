@@ -1,0 +1,24 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="100%" height="100%">
+  <defs>
+    <linearGradient id="bgGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#3b82f6"/>
+      <stop offset="50%" stop-color="#8b5cf6"/>
+      <stop offset="100%" stop-color="#ec4899"/>
+    </linearGradient>
+    <linearGradient id="chocoGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#ffffff"/>
+      <stop offset="100%" stop-color="#cbd5e1"/>
+    </linearGradient>
+    <filter id="shadow" x="-10%" y="-10%" width="120%" height="120%">
+      <feDropShadow dx="0" dy="16" stdDeviation="20" flood-color="#000000" flood-opacity="0.35"/>
+    </filter>
+  </defs>
+
+  <!-- Dumaloq fon -->
+  <rect width="512" height="512" rx="128" fill="url(#bgGrad)"/>
+  
+  <!-- Shokolad/Konfet belgisi -->
+  <g filter="url(#shadow)" transform="translate(96, 96) scale(0.625)">
+    <path fill="url(#chocoGrad)" d="M400 160c0-44.2-35.8-80-80-80H192c-44.2 0-80 35.8-80 80v192c0 44.2 35.8 80 80 80h128c44.2 0 80-35.8 80-80V160zm-80-32c17.7 0 32 14.3 32 32v48H288v-80h32zm-80 0v80h-64v-80h64zm-112 32c0-17.7 14.3-32 32-32h32v80h-64v-48zm0 96h64v80h-64v-80zm112 80v-80h64v80h-64zm80 0v-80h64v80h-64zm64 48c0 17.7-14.3 32-32 32h-32v-80h64v48zm-112 32h-64v-80h64v80zm-112 0c-17.7 0-32-14.3-32-32v-48h64v80h-32z"/>
+  </g>
+</svg>

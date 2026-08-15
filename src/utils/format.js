@@ -27,29 +27,20 @@ export const parseNumberFromSpaces = (val) => {
 export const fallbackImage = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='100' height='100' viewBox='0 0 24 24' fill='none' stroke='%23475569' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Crect width='18' height='18' x='3' y='3' rx='2' ry='2'%3E%3C/rect%3E%3Cpath d='m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21'%3E%3C/path%3E%3Ccircle cx='9' cy='9' r='2'%3E%3C/circle%3E%3C/svg%3E";
 
 export const getImageUrl = (imagePath) => {
-  if (!imagePath) return null;
-  if (imagePath.startsWith('blob:') || imagePath.startsWith('http://') || imagePath.startsWith('https://')) {
+  if (!imagePath || typeof imagePath !== 'string') return null;
+  
+  // Agar to'liq URL bo'lsa (http/https), to'g'ridan-to'g'ri qaytar
+  if (imagePath.startsWith('http://') || imagePath.startsWith('https://')) {
     return imagePath;
   }
-  
-  let backendUrl = 
-    import.meta.env?.VITE_API_BASE_URL || 
-    import.meta.env?.VITE_API_URL || 
-    (typeof process !== 'undefined' ? process.env?.NEXT_PUBLIC_API_URL || process.env?.VITE_API_URL : null);
-    
-  if (!backendUrl) {
-    const isLocal = window.location.hostname === 'localhost' || 
-                    window.location.hostname === '127.0.0.1' || 
-                    window.location.hostname.startsWith('192.168.') || 
-                    window.location.hostname.startsWith('10.') || 
-                    window.location.hostname.startsWith('172.');
-                    
-    backendUrl = isLocal 
-      ? `http://${window.location.hostname}:5000`
-      : 'https://sweetflow-backend-production.up.railway.app';
-  }
-  
-  const cleanBase = backendUrl.replace(/\/api\/v1\/?$/, '').replace(/\/+$/, '');
+
+  // Asosiy Backend domeni (Railway)
+  const BASE_BACKEND_URL = import.meta.env?.VITE_API_BASE_URL 
+    ? import.meta.env.VITE_API_BASE_URL.replace(/\/api\/v1\/?$/, '').replace(/\/+$/, '')
+    : 'https://sweetflow-backend-production.up.railway.app';
+
+  // Path boshidagi ortiqcha / yoki uploads/ so'zlarini tozalash
   const cleanPath = imagePath.replace(/^\/+/, '').replace(/^uploads\//, '');
-  return `${cleanBase}/uploads/${cleanPath}`;
+
+  return `${BASE_BACKEND_URL}/uploads/${cleanPath}`;
 };

@@ -455,19 +455,10 @@ export const POSPage = () => {
         {/* Digital Billing Invoice Checkout Summary */}
         <div className="p-3 sm:p-4 pb-20 lg:pb-3 border-t border-white/5 bg-slate-950/80 space-y-3 rounded-b-2xl">
           <div className="space-y-2 my-1">
-            <div className="flex justify-between items-center text-sm text-gray-300">
+            <div className="flex justify-between items-center text-sm text-gray-300 border-b border-white/5 pb-2">
               <span className="font-medium">Jami summa:</span>
               <span className="font-black text-white text-base sm:text-lg">{totalAmount.toLocaleString()} so'm</span>
             </div>
-
-            {cart.length > 0 && (
-              <div className="flex justify-between text-xs text-gray-500 border-b border-white/5 pb-2">
-                <span>Sof Foyda:</span>
-                <span className={`font-semibold ${netProfit >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>
-                  {netProfit >= 0 ? '+' : ''}{netProfit.toLocaleString()} so'm
-                </span>
-              </div>
-            )}
 
             <div className="flex items-center justify-between text-sm py-1">
               <span className="text-gray-300 font-medium">Naqd to'lov:</span>
@@ -518,17 +509,7 @@ export const POSPage = () => {
               <div className="flex justify-between gap-2"><span className="text-gray-400 shrink-0">Jami narx:</span> <span className="font-bold text-white">{Number(successOrder.totalAmount).toLocaleString()} so'm</span></div>
               <div className="flex justify-between gap-2"><span className="text-gray-400 shrink-0">Naqd to'landi:</span> <span className="text-green-400 font-semibold">{(Number(successOrder.totalAmount) - Number(successOrder.debtAmount)).toLocaleString()} so'm</span></div>
               <div className="flex justify-between gap-2"><span className="text-gray-400 shrink-0">Nasiya (Qarz):</span> <span className="text-red-400 font-bold">{Number(successOrder.debtAmount).toLocaleString()} so'm</span></div>
-              <div className="flex justify-between gap-2"><span className="text-gray-400 shrink-0">Sof Foyda:</span> <span className={`font-bold ${successOrder.items?.reduce((t, item) => {
-                const cost = item.unitType === 'BOX'
-                  ? item.quantity * Number(item.product?.boxCostPrice || item.product?.costPrice || 0)
-                  : item.quantity * Number(item.product?.costPrice || 0);
-                return t + (Number(item.totalPrice) - cost);
-              }, 0) >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>{successOrder.items?.reduce((t, item) => {
-                const cost = item.unitType === 'BOX'
-                  ? item.quantity * Number(item.product?.boxCostPrice || item.product?.costPrice || 0)
-                  : item.quantity * Number(item.product?.costPrice || 0);
-                return t + (Number(item.totalPrice) - cost);
-              }, 0).toLocaleString()} so'm</span></div>
+
               <div className="flex justify-between gap-2"><span className="text-gray-400 shrink-0">To'lov muddati:</span> <span className="text-yellow-400 font-semibold">{new Date(successOrder.dueDate).toLocaleDateString()}</span></div>
             </div>
 

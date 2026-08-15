@@ -261,6 +261,20 @@ export const POSPage = () => {
                   >
                     <Eye size={14} />
                   </button>
+
+                  {/* Product Image Thumbnail */}
+                  <div className="w-full h-20 sm:h-24 rounded-lg overflow-hidden bg-slate-900/60 border border-white/5 mb-1.5 flex items-center justify-center">
+                    {product.imageUrl ? (
+                      <img 
+                        src={getImageUrl(product.imageUrl)} 
+                        alt={product.name} 
+                        className="h-full w-full object-cover" 
+                        onError={(e) => { e.target.onerror = null; e.target.src = fallbackImage; }} 
+                      />
+                    ) : (
+                      <Box size={24} className="text-gray-600" />
+                    )}
+                  </div>
                   
                   {/* Row 1: Name + Category */}
                   <div className="space-y-0.5 mb-1 sm:mb-1.5 pr-6">

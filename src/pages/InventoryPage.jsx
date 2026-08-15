@@ -337,7 +337,7 @@ export const InventoryPage = () => {
           <div>
             <div className="text-[10px] sm:text-xs text-gray-400 uppercase tracking-wider font-semibold">Umumiy zaxira qoldig'i</div>
             <div className="text-lg sm:text-xl font-bold text-white mt-0.5">
-              {products.reduce((acc, p) => acc + p.stockCount, 0).toLocaleString()} dona
+              {products.reduce((acc, p) => acc + Math.floor((p.stockCount || 0) / (p.quantityInBox || 1)), 0).toLocaleString()} quti
             </div>
           </div>
         </div>

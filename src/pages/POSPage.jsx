@@ -567,18 +567,21 @@ export const POSPage = () => {
 
       {/* Sticky Bottom Go to Cart Button for Mobile */}
       {cart.length > 0 && activeMobileTab === 'catalog' && (
-        <div className="fixed bottom-3 left-3 right-3 flex min-[500px]:hidden z-30 justify-center">
-          <button
-            onClick={() => setActiveMobileTab('cart')}
-            className="w-full bg-brand-500 hover:bg-brand-600 active:scale-[0.98] text-white py-2.5 px-4 rounded-xl font-bold transition flex items-center justify-between text-xs border border-brand-400 shadow-2xl shadow-brand-500/30 cursor-pointer"
-          >
-            <div className="flex items-center space-x-1.5">
-              <ShoppingCart size={14} />
-              <span>Savatga o'tish ({cart.reduce((total, item) => total + item.quantity, 0)} ta)</span>
-            </div>
-            <span className="font-extrabold">{totalAmount.toLocaleString()} so'm</span>
-          </button>
-        </div>
+        <button
+          onClick={() => setActiveMobileTab('cart')}
+          className="fixed bottom-4 left-4 right-4 z-50 min-[500px]:hidden flex items-center justify-between px-5 py-3.5 bg-slate-900/95 backdrop-blur-md border border-blue-500/30 rounded-2xl shadow-2xl shadow-black active:scale-[0.98] transition-all duration-200 cursor-pointer"
+        >
+          <div className="flex items-center gap-2.5 text-white font-medium text-sm">
+            <ShoppingCart className="w-5 h-5 text-blue-400" />
+            <span>Savat</span>
+            <span className="px-2 py-0.5 text-xs font-bold bg-blue-600 text-white rounded-full">
+              {cart.reduce((total, item) => total + item.quantity, 0)} ta
+            </span>
+          </div>
+          <div className="text-base font-bold text-white tracking-wide">
+            {totalAmount.toLocaleString()} so'm
+          </div>
+        </button>
       )}
 
     </div>

@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useStores } from '../hooks/useStores';
+import api from '../services/api';
+import { formatNumberWithSpaces, parseNumberFromSpaces } from '../utils/format';
 import { Search, Plus, UserPlus, Phone, DollarSign, Calendar, AlertTriangle, FileText, X, Trash2, Pencil, Send } from 'lucide-react';
 import toast from 'react-hot-toast';
 
@@ -26,7 +28,7 @@ export const StoresPage = () => {
   const [ownerName, setOwnerName] = useState('');
   const [phone, setPhone] = useState('+998');
   const [telegramChatId, setTelegramChatId] = useState('');
-  const [creditLimit, setCreditLimit] = useState(10000000); // Default 10M
+  const [creditLimit, setCreditLimit] = useState('10 000 000'); // Default 10M
   const [paymentDays, setPaymentDays] = useState(30);       // Default 30 days
 
   // Edit Form states
@@ -35,7 +37,7 @@ export const StoresPage = () => {
   const [editStoreOwnerName, setEditStoreOwnerName] = useState('');
   const [editStorePhone, setEditStorePhone] = useState('');
   const [editStoreTelegramChatId, setEditStoreTelegramChatId] = useState('');
-  const [editStoreCreditLimit, setEditStoreCreditLimit] = useState(0);
+  const [editStoreCreditLimit, setEditStoreCreditLimit] = useState('0');
   const [editStorePaymentDays, setEditStorePaymentDays] = useState(0);
 
   useEffect(() => {
@@ -69,9 +71,10 @@ export const StoresPage = () => {
       ownerName,
       phone,
       telegramChatId: telegramChatId || undefined,
-      creditLimit: Number(creditLimit),
+      creditLimit: parseNumberFromSpaces(creditLimit),
       paymentDays: Number(paymentDays),
     };
+
 
     const res = await addStore(payload);
     if (res.success) {
@@ -80,7 +83,7 @@ export const StoresPage = () => {
       setOwnerName('');
       setPhone('+998');
       setTelegramChatId('');
-      setCreditLimit(10000000);
+      setCreditLimit('10 000 000');
       setPaymentDays(30);
       setShowAddForm(false);
       fetchStores();
@@ -115,7 +118,7 @@ export const StoresPage = () => {
     setEditStoreOwnerName(store.ownerName);
     setEditStorePhone(store.phone);
     setEditStoreTelegramChatId(store.telegramChatId || '');
-    setEditStoreCreditLimit(store.creditLimit);
+    setEditStoreCreditLimit(formatNumberWithSpaces(store.creditLimit));
     setEditStorePaymentDays(store.paymentDays);
     setShowEditForm(true);
   };
@@ -133,9 +136,10 @@ export const StoresPage = () => {
       ownerName: editStoreOwnerName,
       phone: editStorePhone,
       telegramChatId: editStoreTelegramChatId || undefined,
-      creditLimit: Number(editStoreCreditLimit),
+      creditLimit: parseNumberFromSpaces(editStoreCreditLimit),
       paymentDays: Number(editStorePaymentDays),
     };
+
 
     const res = await updateStore(editStoreId, payload);
     if (res.success) {
@@ -169,7 +173,7 @@ export const StoresPage = () => {
       return;
     }
     setSelectedStoreForPayment(store);
-    setPaymentAmount(Math.round(Number(store.currentDebt)));
+    setPaymentAmount(formatNumberWithSpaces(Math.round(Number(store.currentDebt))));
     setPaymentMethod('CASH');
     setPaymentNote('');
     setShowPaymentForm(true);
@@ -177,7 +181,7 @@ export const StoresPage = () => {
 
   const handlePaySubmit = async (e) => {
     e.preventDefault();
-    const amt = Number(paymentAmount);
+    const amt = parseNumberFromSpaces(paymentAmount);
     if (isNaN(amt) || amt <= 0) {
       toast.error("Musbat to'lov summasini kiriting!");
       return;
@@ -467,11 +471,11 @@ export const StoresPage = () => {
                 <div className="space-y-1">
                   <label className="text-xs text-gray-400 block">Kredit limiti (so'm):</label>
                   <input
-                    type="number"
+                    type="text"
                     required
                     className="bg-slate-900 border border-white/10 rounded-xl text-white w-full p-2.5 focus:ring-brand-500 focus:border-brand-500"
                     value={creditLimit}
-                    onChange={(e) => setCreditLimit(e.target.value)}
+                    onChange={(e) => setCreditLimit(formatNumberWithSpaces(e.target.value))}
                   />
                 </div>
 
@@ -573,10 +577,18 @@ export const StoresPage = () => {
                         </div>
 
                         <div className="flex justify-between items-center pt-2 border-t border-white/5 text-xs">
-                          <div className="space-y-1">
-                            <div>Jami: <span className="font-bold text-white">{Number(order.totalAmount).toLocaleString()} s.</span></div>
-                            <div>Qarz: <span className={`font-semibold ${order.debtAmount > 0 ? 'text-red-400' : 'text-gray-400'}`}>{Number(order.debtAmount).toLocaleString()} s.</span></div>
-                          </div>
+                           <div className="space-y-1">
+                             <div>Jami: <span className="font-bold text-white">{Number(order.totalAmount).toLocaleString()} s.</span></div>
+                             <div>Sof Foyda: <span className="font-bold text-emerald-400">{Number(order.items?.reduce((total, item) => {
+                               const qtyInPieces = item.unitType === 'BOX' 
+                                 ? item.quantity * (item.product?.quantityInBox || 1)
+                                 : item.quantity;
+                               const cost = qtyInPieces * Number(item.product?.costPrice || 0);
+                               const sale = Number(item.totalPrice);
+                               return total + (sale - cost);
+                             }, 0) || 0).toLocaleString()} s.</span></div>
+                             <div>Qarz: <span className={`font-semibold ${order.debtAmount > 0 ? 'text-red-400' : 'text-gray-400'}`}>{Number(order.debtAmount).toLocaleString()} s.</span></div>
+                           </div>
 
                           <div className="text-right space-y-1">
                             <div className="text-gray-400">Muddat: <span className={isOrderOverdue ? 'text-red-400 font-bold' : 'text-gray-300'}>{new Date(order.dueDate).toLocaleDateString()}</span></div>
@@ -697,11 +709,11 @@ export const StoresPage = () => {
                 <div className="space-y-1">
                   <label className="text-xs text-gray-400 block">Qarz Limiti (so'm):</label>
                   <input
-                    type="number"
+                    type="text"
                     required
                     className="bg-slate-900 border border-white/10 rounded-xl text-white w-full p-2.5 focus:ring-brand-500"
                     value={editStoreCreditLimit}
-                    onChange={(e) => setEditStoreCreditLimit(e.target.value)}
+                    onChange={(e) => setEditStoreCreditLimit(formatNumberWithSpaces(e.target.value))}
                   />
                 </div>
 
@@ -752,13 +764,12 @@ export const StoresPage = () => {
               <div className="space-y-1">
                 <label className="text-xs text-gray-400 block font-semibold">To'lov summasi (so'm):</label>
                 <input
-                  type="number"
+                  type="text"
                   required
                   placeholder="Summani kiriting..."
                   className="bg-slate-900 border border-white/10 rounded-xl text-white font-bold font-mono w-full p-2.5 focus:ring-emerald-500 focus:border-emerald-500"
                   value={paymentAmount}
-                  max={Number(selectedStoreForPayment?.currentDebt || 0)}
-                  onChange={(e) => setPaymentAmount(e.target.value)}
+                  onChange={(e) => setPaymentAmount(formatNumberWithSpaces(e.target.value))}
                 />
               </div>
 

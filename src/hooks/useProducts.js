@@ -37,7 +37,9 @@ export const useProducts = () => {
     setLoading(true);
     setError(null);
     try {
-      const response = await api.post('/products', productData);
+      const isFormData = productData instanceof FormData;
+      const config = isFormData ? { headers: { 'Content-Type': 'multipart/form-data' } } : {};
+      const response = await api.post('/products', productData, config);
       setProducts((prev) => [response.data.data.product, ...prev]);
       return { success: true, product: response.data.data.product };
     } catch (err) {
@@ -68,7 +70,9 @@ export const useProducts = () => {
     setLoading(true);
     setError(null);
     try {
-      const response = await api.put(`/products/${id}`, productData);
+      const isFormData = productData instanceof FormData;
+      const config = isFormData ? { headers: { 'Content-Type': 'multipart/form-data' } } : {};
+      const response = await api.put(`/products/${id}`, productData, config);
       const updatedProduct = response.data.data.product;
       setProducts((prev) => prev.map((p) => (p.id === id ? updatedProduct : p)));
       setLowStockProducts((prev) => {

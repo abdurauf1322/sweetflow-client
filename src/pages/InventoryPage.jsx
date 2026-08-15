@@ -1,7 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { useProducts } from '../hooks/useProducts';
 import api from '../services/api';
-import { Search, Plus, Tag, Box, AlertTriangle, Layers, X, ClipboardList, Trash2, Pencil } from 'lucide-react';
+import { formatNumberWithSpaces, parseNumberFromSpaces, getImageUrl } from '../utils/format';
+
+import { Search, Plus, Tag, Box, AlertTriangle, Layers, X, ClipboardList, Trash2, Pencil, DollarSign } from 'lucide-react';
 import toast from 'react-hot-toast';
 
 export const InventoryPage = () => {
@@ -29,8 +31,12 @@ export const InventoryPage = () => {
   const [unitPrice, setUnitPrice] = useState('');
   const [boxPrice, setBoxPrice] = useState('');
   const [quantityInBox, setQuantityInBox] = useState('');
+  const [costPrice, setCostPrice] = useState('');       // Dona tannarxi
+  const [boxCostPrice, setBoxCostPrice] = useState(''); // Quti tannarxi
   const [initialPieceStock, setInitialPieceStock] = useState(0);
   const [initialBoxes, setInitialBoxes] = useState(0);
+  const [imagePreview, setImagePreview] = useState('');
+  const [imageFile, setImageFile] = useState(null);
 
   // Edit Form states
   const [editId, setEditId] = useState('');
@@ -39,8 +45,59 @@ export const InventoryPage = () => {
   const [editUnitPrice, setEditUnitPrice] = useState('');
   const [editBoxPrice, setEditBoxPrice] = useState('');
   const [editQuantityInBox, setEditQuantityInBox] = useState('');
+  const [editCostPrice, setEditCostPrice] = useState('');       // Dona tannarxi
+  const [editBoxCostPrice, setEditBoxCostPrice] = useState(''); // Quti tannarxi
   const [editStockPieces, setEditStockPieces] = useState(0);
   const [editStockBoxes, setEditStockBoxes] = useState(0);
+  const [editImagePreview, setEditImagePreview] = useState('');
+  const [editImageFile, setEditImageFile] = useState(null);
+  const [isUploading, setIsUploading] = useState(false);
+  // Expense states
+  const [isExpenseModalOpen, setIsExpenseModalOpen] = useState(false);
+  const [expenseAmount, setExpenseAmount] = useState('');
+  const [expenseDescription, setExpenseDescription] = useState('');
+  const [addingExpense, setAddingExpense] = useState(false);
+  const isBoss = localStorage.getItem('role') === 'boss';
+  const isManager = localStorage.getItem('role') === 'manager';
+
+  const handleImageUpload = (e, isEdit = false) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    if (isEdit) {
+      setEditImageFile(file);
+      setEditImagePreview(URL.createObjectURL(file));
+    } else {
+      setImageFile(file);
+      setImagePreview(URL.createObjectURL(file));
+    }
+  };
+
+  const handleAddExpenseSubmit = async (e) => {
+    e.preventDefault();
+    const rawAmount = parseNumberFromSpaces(expenseAmount);
+    if (!rawAmount || !expenseDescription.trim()) {
+      toast.error("Barcha maydonlarni to'g'ri to'ldiring");
+      return;
+    }
+    setAddingExpense(true);
+    try {
+      await api.post('/expenses', {
+        amount: rawAmount,
+        description: expenseDescription.trim(),
+      });
+      toast.success("Xarajat muvaffaqiyatli saqlandi va kassadan ayirildi!");
+      setIsExpenseModalOpen(false);
+      setExpenseAmount('');
+      setExpenseDescription('');
+    } catch (err) {
+      toast.error(err.response?.data?.message || 'Xatolik yuz berdi');
+    } finally {
+      setAddingExpense(false);
+    }
+  };
+
+
 
   useEffect(() => {
     fetchProducts();
@@ -120,29 +177,40 @@ export const InventoryPage = () => {
   const handleRegisterProduct = async (e) => {
     e.preventDefault();
 
-    if (!name || !categoryId || !unitPrice || !boxPrice || !quantityInBox) {
+    if (!name || !categoryId || !unitPrice || !boxPrice || !quantityInBox || !costPrice || !boxCostPrice) {
       toast.error('Barcha maydonlarni to\'ldiring!');
       return;
     }
 
-    const payload = {
-      name,
-      categoryId,
-      unitPrice: Number(unitPrice),
-      boxPrice: Number(boxPrice),
-      quantityInBox: Number(quantityInBox),
-      stock: Number(initialPieceStock),
-      boxes: Number(initialBoxes),
-    };
+    const payload = new FormData();
+    payload.append('name', name);
+    payload.append('categoryId', categoryId);
+    payload.append('unitPrice', parseNumberFromSpaces(unitPrice));
+    payload.append('boxPrice', parseNumberFromSpaces(boxPrice));
+    payload.append('quantityInBox', Number(quantityInBox));
+    payload.append('costPrice', parseNumberFromSpaces(costPrice));
+    payload.append('boxCostPrice', parseNumberFromSpaces(boxCostPrice));
+    payload.append('stock', Number(initialPieceStock));
+    payload.append('boxes', Number(initialBoxes));
+    if (imageFile) {
+      payload.append('image', imageFile);
+    }
 
+    setIsUploading(true);
     const res = await addProduct(payload);
+    setIsUploading(false);
     if (res.success) {
       setName('');
       setCategoryId('');
       setUnitPrice('');
       setBoxPrice('');
       setQuantityInBox('');
+      setCostPrice('');
+      setBoxCostPrice('');
       setInitialPieceStock(0);
+      setImagePreview('');
+      setImageFile(null);
+
       setInitialBoxes(0);
       setShowAddForm(false);
       fetchProducts();
@@ -165,40 +233,65 @@ export const InventoryPage = () => {
   };
 
   const handleEditClick = (product) => {
-    setEditId(product.id);
-    setEditName(product.name);
-    setEditCategoryId(product.categoryId);
-    setEditUnitPrice(product.unitPrice);
-    setEditBoxPrice(product.boxPrice);
-    setEditQuantityInBox(product.quantityInBox);
-    setEditStockPieces(product.stockCount % product.quantityInBox);
-    setEditStockBoxes(Math.floor(product.stockCount / product.quantityInBox));
+    if (!product) return;
+    setEditId(product.id || '');
+    setEditName(product.name || '');
+    setEditCategoryId(product.categoryId || '');
+    setEditUnitPrice(formatNumberWithSpaces(product.unitPrice || 0));
+    setEditBoxPrice(formatNumberWithSpaces(product.boxPrice || 0));
+    
+    const qty = product.quantityInBox || 1; // Prevent division by zero
+    const stock = product.stockCount || 0;
+    
+    setEditQuantityInBox(qty);
+    setEditCostPrice(formatNumberWithSpaces(product.costPrice || 0));
+    setEditBoxCostPrice(formatNumberWithSpaces(product.boxCostPrice || 0));
+    
+    // Start at 0 for adding stock (refilling)
+    setEditStockPieces(0);
+    setEditStockBoxes(0);
+    
+    // Safely set image preview string
+    setEditImagePreview(typeof product.imageUrl === 'string' ? product.imageUrl : '');
+    setEditImageFile(null);
     setShowEditForm(true);
   };
+
+
 
   const handleUpdateProduct = async (e) => {
     e.preventDefault();
 
-    if (!editName || !editCategoryId || !editUnitPrice || !editBoxPrice || !editQuantityInBox) {
+    if (!editName || !editCategoryId || !editUnitPrice || !editBoxPrice || !editQuantityInBox || editCostPrice === '' || editBoxCostPrice === '') {
       toast.error('Barcha maydonlarni to\'ldiring!');
       return;
     }
 
-    const payload = {
-      name: editName,
-      categoryId: editCategoryId,
-      unitPrice: Number(editUnitPrice),
-      boxPrice: Number(editBoxPrice),
-      quantityInBox: Number(editQuantityInBox),
-      stock: Number(editStockPieces),
-      boxes: Number(editStockBoxes),
-    };
+    const payload = new FormData();
+    payload.append('name', editName);
+    payload.append('categoryId', editCategoryId);
+    payload.append('unitPrice', parseNumberFromSpaces(editUnitPrice));
+    payload.append('boxPrice', parseNumberFromSpaces(editBoxPrice));
+    payload.append('quantityInBox', Number(editQuantityInBox));
+    payload.append('costPrice', parseNumberFromSpaces(editCostPrice));
+    payload.append('boxCostPrice', parseNumberFromSpaces(editBoxCostPrice));
+    payload.append('stock', Number(editStockPieces));
+    payload.append('boxes', Number(editStockBoxes));
+    if (editImageFile) {
+      payload.append('image', editImageFile);
+    }
 
+
+
+    setIsUploading(true);
     const res = await updateProduct(editId, payload);
+    setIsUploading(false);
     if (res.success) {
       setShowEditForm(false);
       fetchProducts();
       toast.success("Mahsulot yangilandi!");
+      setEditStockPieces(0);
+      setEditStockBoxes(0);
     } else {
       toast.error(`Tahrirlashda xatolik yuz berdi: ${res.error}`);
     }
@@ -301,6 +394,16 @@ export const InventoryPage = () => {
             )}
           </div>
 
+          {(isBoss || isManager) && (
+            <button
+              onClick={() => setIsExpenseModalOpen(true)}
+              className="bg-red-500/10 hover:bg-red-500/20 text-red-400 font-bold py-2.5 px-4 rounded-xl text-xs flex items-center justify-center space-x-2 shrink-0 border border-red-500/30 cursor-pointer transition min-h-[40px] w-full sm:w-auto"
+            >
+              <DollarSign size={14} />
+              <span>Xarajat qo'shish</span>
+            </button>
+          )}
+
           <button
             onClick={() => setShowAddForm(true)}
             className="bg-brand-500 hover:bg-brand-600 text-white font-bold py-2.5 px-4 rounded-xl text-xs flex items-center justify-center space-x-2 shrink-0 border border-brand-400 cursor-pointer shadow-lg shadow-brand-500/10 hover:shadow-brand-500/20 min-h-[40px] w-full sm:w-auto"
@@ -343,12 +446,27 @@ export const InventoryPage = () => {
 
                   return (
                     <tr key={product.id} className="hover:bg-white/[0.02] transition">
-                      <td className="p-4 font-semibold text-white">{product.name}</td>
+                      <td className="p-4 font-semibold text-white">
+                        <div className="flex items-center space-x-3">
+                          <div className="h-10 w-10 shrink-0 rounded-lg overflow-hidden bg-slate-900 border border-white/5 flex items-center justify-center">
+                            {product.imageUrl ? (
+                              <img src={getImageUrl(product.imageUrl)} alt={product.name} className="h-full w-full object-cover" />
+                            ) : (
+                              <Box size={16} className="text-gray-600" />
+                            )}
+                          </div>
+                          <span>{product.name}</span>
+                        </div>
+                      </td>
                       <td className="p-4 text-gray-400">{product.category?.name || 'Noma\'lum'}</td>
                       <td className="p-4 text-gray-400">{product.quantityInBox} dona</td>
-                      <td className="p-4 text-white">
-                        {Number(product.unitPrice).toLocaleString()} s. / <span className="text-brand-300 font-semibold">{Number(product.boxPrice).toLocaleString()} s.</span>
+                      <td className="p-4 text-white text-xs">
+                        <div className="text-[10px] text-gray-500">Tannarx: {Number(product.costPrice || 0).toLocaleString()} s.</div>
+                        <div>
+                          {Number(product.unitPrice).toLocaleString()} s. / <span className="text-brand-300 font-semibold">{Number(product.boxPrice).toLocaleString()} s.</span>
+                        </div>
                       </td>
+
                       <td className="p-4 font-mono text-white">{product.stockCount} dona</td>
                       <td className="p-4 font-mono text-white">
                         {boxCount} quti {pieceRem > 0 && `+ ${pieceRem} dona`}
@@ -404,7 +522,16 @@ export const InventoryPage = () => {
                 <div key={product.id} className="w-full overflow-hidden p-4 rounded-xl border border-slate-700 bg-slate-800/90 space-y-3">
                   {/* Row 1: Name + Edit/Delete buttons */}
                   <div className="flex items-center justify-between gap-2 w-full">
-                    <h3 className="font-bold text-white text-sm leading-tight truncate min-w-0 flex-1">{product.name}</h3>
+                    <div className="flex items-center space-x-3 min-w-0 flex-1">
+                      <div className="h-10 w-10 shrink-0 rounded-lg overflow-hidden bg-slate-900 border border-white/5 flex items-center justify-center">
+                        {product.imageUrl ? (
+                          <img src={getImageUrl(product.imageUrl)} alt={product.name} className="h-full w-full object-cover" />
+                        ) : (
+                          <Box size={16} className="text-gray-600" />
+                        )}
+                      </div>
+                      <h3 className="font-bold text-white text-sm leading-tight truncate">{product.name}</h3>
+                    </div>
                     <div className="flex items-center gap-2 shrink-0">
                       <button
                         onClick={() => handleEditClick(product)}
@@ -441,10 +568,15 @@ export const InventoryPage = () => {
 
                   {/* Row 3: Prices & Stock in 2x2 Grid */}
                   <div className="grid grid-cols-2 gap-2 w-full p-2.5 bg-slate-900/50 rounded-lg text-xs">
+                    <div className="min-w-0 col-span-2 border-b border-white/5 pb-1 mb-1">
+                      <span className="text-gray-500 block text-[9px] uppercase tracking-wider">Tannarxi (dona)</span>
+                      <span className="text-gray-400 font-semibold break-words">{Number(product.costPrice || 0).toLocaleString()} s.</span>
+                    </div>
                     <div className="min-w-0">
                       <span className="text-gray-500 block text-[9px] uppercase tracking-wider">Dona narxi</span>
                       <span className="text-white font-semibold break-words">{Number(product.unitPrice).toLocaleString()} s.</span>
                     </div>
+
                     <div className="min-w-0">
                       <span className="text-gray-500 block text-[9px] uppercase tracking-wider">Zaxira (dona)</span>
                       <span className="text-white font-semibold font-mono break-words">{product.stockCount} dona</span>
@@ -561,40 +693,66 @@ export const InventoryPage = () => {
                 )}
               </div>
 
-              <div className="grid grid-cols-3 gap-2 sm:gap-3">
-                <div className="space-y-1">
-                  <label className="text-[10px] sm:text-xs text-gray-400 block">Dona narx (s.):</label>
-                  <input
-                    type="number"
-                    required
-                    className="bg-slate-900 border border-white/10 rounded-xl text-white w-full p-2 focus:ring-brand-500 text-xs sm:text-sm"
-                    value={unitPrice}
-                    onChange={(e) => setUnitPrice(e.target.value)}
-                  />
+              {/* Narxlar qismi: 2+2+1 ta maydon */}
+              <div className="space-y-2">
+                <div className="text-[10px] text-gray-500 uppercase tracking-wider font-semibold">Tannarxlar (Xarid narxi)</div>
+                <div className="grid grid-cols-2 gap-2 sm:gap-3">
+                  <div className="space-y-1">
+                    <label className="text-[10px] sm:text-xs text-gray-400 block">Dona tannarxi (s.):</label>
+                    <input
+                      type="text"
+                      required
+                      className="bg-slate-900 border border-white/10 rounded-xl text-white w-full p-2 focus:ring-brand-500 text-xs sm:text-sm"
+                      value={costPrice}
+                      onChange={(e) => setCostPrice(formatNumberWithSpaces(e.target.value))}
+                    />
+                  </div>
+                  <div className="space-y-1">
+                    <label className="text-[10px] sm:text-xs text-gray-400 block">Quti tannarxi (s.):</label>
+                    <input
+                      type="text"
+                      required
+                      className="bg-slate-900 border border-white/10 rounded-xl text-white w-full p-2 focus:ring-brand-500 text-xs sm:text-sm"
+                      value={boxCostPrice}
+                      onChange={(e) => setBoxCostPrice(formatNumberWithSpaces(e.target.value))}
+                    />
+                  </div>
                 </div>
-
-                <div className="space-y-1">
-                  <label className="text-[10px] sm:text-xs text-gray-400 block">Quti narx (s.):</label>
-                  <input
-                    type="number"
-                    required
-                    className="bg-slate-900 border border-white/10 rounded-xl text-white w-full p-2 focus:ring-brand-500 text-xs sm:text-sm"
-                    value={boxPrice}
-                    onChange={(e) => setBoxPrice(e.target.value)}
-                  />
-                </div>
-
-                <div className="space-y-1">
-                  <label className="text-[10px] sm:text-xs text-gray-400 block">Qutida dona:</label>
-                  <input
-                    type="number"
-                    required
-                    className="bg-slate-900 border border-white/10 rounded-xl text-white w-full p-2 focus:ring-brand-500 text-xs sm:text-sm"
-                    value={quantityInBox}
-                    onChange={(e) => setQuantityInBox(e.target.value)}
-                  />
+                <div className="text-[10px] text-gray-500 uppercase tracking-wider font-semibold mt-1">Sotish Narxlari</div>
+                <div className="grid grid-cols-3 gap-2 sm:gap-3">
+                  <div className="space-y-1">
+                    <label className="text-[10px] sm:text-xs text-gray-400 block">Dona narx (s.):</label>
+                    <input
+                      type="text"
+                      required
+                      className="bg-slate-900 border border-white/10 rounded-xl text-white w-full p-2 focus:ring-brand-500 text-xs sm:text-sm"
+                      value={unitPrice}
+                      onChange={(e) => setUnitPrice(formatNumberWithSpaces(e.target.value))}
+                    />
+                  </div>
+                  <div className="space-y-1">
+                    <label className="text-[10px] sm:text-xs text-gray-400 block">Quti narx (s.):</label>
+                    <input
+                      type="text"
+                      required
+                      className="bg-slate-900 border border-white/10 rounded-xl text-white w-full p-2 focus:ring-brand-500 text-xs sm:text-sm"
+                      value={boxPrice}
+                      onChange={(e) => setBoxPrice(formatNumberWithSpaces(e.target.value))}
+                    />
+                  </div>
+                  <div className="space-y-1">
+                    <label className="text-[10px] sm:text-xs text-gray-400 block">Qutida dona:</label>
+                    <input
+                      type="number"
+                      required
+                      className="bg-slate-900 border border-white/10 rounded-xl text-white w-full p-2 focus:ring-brand-500 text-xs sm:text-sm"
+                      value={quantityInBox}
+                      onChange={(e) => setQuantityInBox(e.target.value)}
+                    />
+                  </div>
                 </div>
               </div>
+
 
               <div className="grid grid-cols-2 gap-3 sm:gap-4">
                 <div className="space-y-1">
@@ -615,6 +773,28 @@ export const InventoryPage = () => {
                     value={initialPieceStock}
                     onChange={(e) => setInitialPieceStock(e.target.value)}
                   />
+                </div>
+              </div>
+
+              <div className="space-y-1">
+                <label className="text-xs text-gray-400 block">Mahsulot rasmi (ixtiyoriy):</label>
+                <div className="flex flex-col space-y-2">
+                  <input
+                    type="file"
+                    accept="image/*"
+                    capture="environment"
+                    className="bg-slate-900 border border-white/10 rounded-xl text-white w-full p-2 text-xs"
+                    onChange={(e) => handleImageUpload(e, false)}
+                    disabled={isUploading}
+                  />
+                  {isUploading && <span className="text-xs text-brand-400">Yuklanmoqda...</span>}
+                  {imagePreview && (
+                    <img 
+                      src={getImageUrl(imagePreview)} 
+                      alt="Preview" 
+                      className="h-20 w-20 object-cover rounded-lg border border-white/10" 
+                    />
+                  )}
                 </div>
               </div>
 
@@ -722,40 +902,66 @@ export const InventoryPage = () => {
                 )}
               </div>
 
-              <div className="grid grid-cols-3 gap-2 sm:gap-3">
-                <div className="space-y-1">
-                  <label className="text-[10px] sm:text-xs text-gray-400 block">Dona narx (s.):</label>
-                  <input
-                    type="number"
-                    required
-                    className="bg-slate-900 border border-white/10 rounded-xl text-white w-full p-2 focus:ring-brand-500 text-xs sm:text-sm"
-                    value={editUnitPrice}
-                    onChange={(e) => setEditUnitPrice(e.target.value)}
-                  />
+              {/* Narxlar qismi: 2+2+1 ta maydon */}
+              <div className="space-y-2">
+                <div className="text-[10px] text-gray-500 uppercase tracking-wider font-semibold">Tannarxlar (Xarid narxi)</div>
+                <div className="grid grid-cols-2 gap-2 sm:gap-3">
+                  <div className="space-y-1">
+                    <label className="text-[10px] sm:text-xs text-gray-400 block">Dona tannarxi (s.):</label>
+                    <input
+                      type="text"
+                      required
+                      className="bg-slate-900 border border-white/10 rounded-xl text-white w-full p-2 focus:ring-brand-500 text-xs sm:text-sm"
+                      value={editCostPrice}
+                      onChange={(e) => setEditCostPrice(formatNumberWithSpaces(e.target.value))}
+                    />
+                  </div>
+                  <div className="space-y-1">
+                    <label className="text-[10px] sm:text-xs text-gray-400 block">Quti tannarxi (s.):</label>
+                    <input
+                      type="text"
+                      required
+                      className="bg-slate-900 border border-white/10 rounded-xl text-white w-full p-2 focus:ring-brand-500 text-xs sm:text-sm"
+                      value={editBoxCostPrice}
+                      onChange={(e) => setEditBoxCostPrice(formatNumberWithSpaces(e.target.value))}
+                    />
+                  </div>
                 </div>
-
-                <div className="space-y-1">
-                  <label className="text-[10px] sm:text-xs text-gray-400 block">Quti narx (s.):</label>
-                  <input
-                    type="number"
-                    required
-                    className="bg-slate-900 border border-white/10 rounded-xl text-white w-full p-2 focus:ring-brand-500 text-xs sm:text-sm"
-                    value={editBoxPrice}
-                    onChange={(e) => setEditBoxPrice(e.target.value)}
-                  />
-                </div>
-
-                <div className="space-y-1">
-                  <label className="text-[10px] sm:text-xs text-gray-400 block">Qutida dona:</label>
-                  <input
-                    type="number"
-                    required
-                    className="bg-slate-900 border border-white/10 rounded-xl text-white w-full p-2 focus:ring-brand-500 text-xs sm:text-sm"
-                    value={editQuantityInBox}
-                    onChange={(e) => setEditQuantityInBox(e.target.value)}
-                  />
+                <div className="text-[10px] text-gray-500 uppercase tracking-wider font-semibold mt-1">Sotish Narxlari</div>
+                <div className="grid grid-cols-3 gap-2 sm:gap-3">
+                  <div className="space-y-1">
+                    <label className="text-[10px] sm:text-xs text-gray-400 block">Dona narx (s.):</label>
+                    <input
+                      type="text"
+                      required
+                      className="bg-slate-900 border border-white/10 rounded-xl text-white w-full p-2 focus:ring-brand-500 text-xs sm:text-sm"
+                      value={editUnitPrice}
+                      onChange={(e) => setEditUnitPrice(formatNumberWithSpaces(e.target.value))}
+                    />
+                  </div>
+                  <div className="space-y-1">
+                    <label className="text-[10px] sm:text-xs text-gray-400 block">Quti narx (s.):</label>
+                    <input
+                      type="text"
+                      required
+                      className="bg-slate-900 border border-white/10 rounded-xl text-white w-full p-2 focus:ring-brand-500 text-xs sm:text-sm"
+                      value={editBoxPrice}
+                      onChange={(e) => setEditBoxPrice(formatNumberWithSpaces(e.target.value))}
+                    />
+                  </div>
+                  <div className="space-y-1">
+                    <label className="text-[10px] sm:text-xs text-gray-400 block">Qutida dona:</label>
+                    <input
+                      type="number"
+                      required
+                      className="bg-slate-900 border border-white/10 rounded-xl text-white w-full p-2 focus:ring-brand-500 text-xs sm:text-sm"
+                      value={editQuantityInBox}
+                      onChange={(e) => setEditQuantityInBox(e.target.value)}
+                    />
+                  </div>
                 </div>
               </div>
+
 
               <div className="grid grid-cols-2 gap-2 sm:gap-4">
                 <div className="space-y-1">
@@ -779,12 +985,89 @@ export const InventoryPage = () => {
                 </div>
               </div>
 
+              <div className="space-y-1">
+                <label className="text-xs text-gray-400 block">Mahsulot rasmi (ixtiyoriy):</label>
+                <div className="flex flex-col space-y-2">
+                  <input
+                    type="file"
+                    accept="image/*"
+                    capture="environment"
+                    className="bg-slate-900 border border-white/10 rounded-xl text-white w-full p-2 text-xs"
+                    onChange={(e) => handleImageUpload(e, true)}
+                    disabled={isUploading}
+                  />
+                  {isUploading && <span className="text-xs text-brand-400">Yuklanmoqda...</span>}
+                  {editImagePreview && (
+                    <img 
+                      src={getImageUrl(editImagePreview)} 
+                      alt="Preview" 
+                      className="h-20 w-20 object-cover rounded-lg border border-white/10" 
+                    />
+                  )}
+                </div>
+              </div>
+
               <button
                 type="submit"
                 className="w-full bg-blue-500 hover:bg-blue-600 text-white font-bold py-3 rounded-xl transition text-sm mt-6 border border-blue-400 cursor-pointer min-h-[44px] flex items-center justify-center"
               >
                 Mahsulotni yangilash
               </button>
+            </form>
+          </div>
+        </div>
+      )}
+      {/* Modals end */}
+      
+      {/* Expense Modal */}
+      {isExpenseModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
+          <div className="glass-panel border-white/10 max-w-sm w-full rounded-2xl p-6 relative">
+            <h3 className="text-lg font-bold text-white mb-4 flex items-center gap-2">
+              <DollarSign className="text-red-400" /> Boshqa xarajat qo'shish
+            </h3>
+            
+            <form onSubmit={handleAddExpenseSubmit} className="space-y-4">
+              <div>
+                <label className="text-xs text-gray-400 block mb-1">Summa (s.):</label>
+                <input
+                  type="text"
+                  required
+                  className="bg-slate-900 border border-white/10 rounded-xl text-white w-full p-2.5 focus:ring-brand-500 text-sm font-bold"
+                  value={expenseAmount}
+                  onChange={(e) => setExpenseAmount(formatNumberWithSpaces(e.target.value))}
+                  placeholder="Masalan: 1 000 000"
+                />
+              </div>
+
+              <div>
+                <label className="text-xs text-gray-400 block mb-1">Izoh (Nima uchun?):</label>
+                <textarea
+                  required
+                  rows={3}
+                  className="bg-slate-900 border border-white/10 rounded-xl text-white w-full p-2.5 focus:ring-brand-500 text-sm"
+                  value={expenseDescription}
+                  onChange={(e) => setExpenseDescription(e.target.value)}
+                  placeholder="Masalan: Ijara puli, Oylik maosh..."
+                />
+              </div>
+
+              <div className="flex gap-3 pt-2">
+                <button
+                  type="button"
+                  onClick={() => setIsExpenseModalOpen(false)}
+                  className="flex-1 px-4 py-2 bg-slate-800 hover:bg-slate-700 text-white text-sm font-semibold rounded-xl transition border border-white/5"
+                >
+                  Bekor qilish
+                </button>
+                <button
+                  type="submit"
+                  disabled={addingExpense}
+                  className="flex-1 px-4 py-2 bg-red-500 hover:bg-red-600 text-white text-sm font-bold rounded-xl transition shadow-lg shadow-red-500/20 flex justify-center items-center"
+                >
+                  {addingExpense ? 'Saqlanmoqda...' : 'Saqlash'}
+                </button>
+              </div>
             </form>
           </div>
         </div>

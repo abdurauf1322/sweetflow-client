@@ -781,8 +781,8 @@ export const InventoryPage = () => {
                 <div className="flex flex-col space-y-2">
                   <input
                     type="file"
-                    accept="image/*"
-                    capture="environment"
+                    accept="image/*,image/jpeg,image/png"
+                    id="product-image-upload"
                     className="bg-slate-900 border border-white/10 rounded-xl text-white w-full p-2 text-xs"
                     onChange={(e) => handleImageUpload(e, false)}
                     disabled={isUploading}
@@ -991,8 +991,8 @@ export const InventoryPage = () => {
                 <div className="flex flex-col space-y-2">
                   <input
                     type="file"
-                    accept="image/*"
-                    capture="environment"
+                    accept="image/*,image/jpeg,image/png"
+                    id="product-image-edit-upload"
                     className="bg-slate-900 border border-white/10 rounded-xl text-white w-full p-2 text-xs"
                     onChange={(e) => handleImageUpload(e, true)}
                     disabled={isUploading}

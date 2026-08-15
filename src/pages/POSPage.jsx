@@ -324,7 +324,7 @@ export const POSPage = () => {
       </div>
 
       {/* RIGHT: Cart & Billing Invoice Panel */}
-      <div className={`w-full lg:w-1/3 lg:max-w-md glass-panel rounded-2xl border border-white/5 flex flex-col min-h-0 lg:h-full ${activeMobileTab === 'catalog' ? 'hidden min-[500px]:flex' : 'flex'}`}>
+      <div className={`w-full lg:w-1/3 lg:max-w-md glass-panel rounded-2xl border border-white/5 flex flex-col lg:h-full ${activeMobileTab === 'catalog' ? 'hidden min-[500px]:flex min-h-0' : 'flex min-h-[calc(100vh-140px)] lg:min-h-0 justify-between'}`}>
         {/* Back to Catalog button for mobile */}
         <div className="flex min-[500px]:hidden items-center justify-between p-2.5 border-b border-white/5 bg-slate-950/20">
           <button
@@ -367,7 +367,7 @@ export const POSPage = () => {
         </div>
 
         {/* Cart items list */}
-        <div className="flex-1 max-h-[320px] lg:max-h-none overflow-y-auto p-2 sm:p-2.5 space-y-1.5 min-h-0 scrollbar-thin">
+        <div className="flex-1 overflow-y-auto p-2 sm:p-3 space-y-2 min-h-0 scrollbar-thin">
           <div className="flex items-center justify-between text-[10px] text-gray-400 font-semibold uppercase">
             <div className="flex items-center space-x-1.5"><ShoppingCart size={12} /> <span>Savat</span></div>
             <span>{cart.length} xil</span>
@@ -385,65 +385,64 @@ export const POSPage = () => {
               return (
                 <div key={item.productId} className="glass-card rounded-xl p-1.5 px-2 border border-white/5 flex flex-col gap-1 w-full overflow-hidden">
                   {/* Row 1: Image, Name, and Delete Button */}
-                  <div className="flex items-center justify-between gap-1.5">
-                    <div className="flex items-center space-x-1.5 min-w-0">
-                      <div className="w-8 h-8 rounded-lg overflow-hidden bg-slate-900 border border-white/5 flex items-center justify-center shrink-0">
+                  <div className="flex items-center justify-between gap-2">
+                    <div className="flex items-center space-x-2.5 min-w-0">
+                      <div className="w-10 h-10 rounded-lg overflow-hidden bg-slate-900 border border-white/5 flex items-center justify-center shrink-0">
                         {item.imageUrl ? (
                           <img src={getImageUrl(item.imageUrl)} alt={item.name} className="h-full w-full object-cover" onError={(e) => { e.target.onerror = null; e.target.src = fallbackImage; }} />
                         ) : (
-                          <Box size={12} className="text-gray-600" />
+                          <Box size={16} className="text-gray-600" />
                         )}
                       </div>
-                      <span className="font-bold text-xs text-white truncate" title={item.name}>{item.name}</span>
+                      <span className="font-bold text-sm text-white truncate" title={item.name}>{item.name}</span>
                     </div>
-                    <button onClick={() => removeFromCart(item.productId)} className="text-red-400 hover:text-red-300 p-0.5 shrink-0 bg-red-400/5 hover:bg-red-400/10 rounded-md transition">
-                      <X size={12} />
+                    <button onClick={() => removeFromCart(item.productId)} className="text-red-400 hover:text-red-300 p-1.5 shrink-0 bg-red-400/5 hover:bg-red-400/10 rounded-md transition">
+                      <X size={16} />
                     </button>
                   </div>
 
-                  {/* Row 2: Selector, Qty +/- controls, Subtotal Price */}
-                  <div className="flex items-center justify-between gap-2 text-[11px] border-t border-white/5 pt-1">
+                  <div className="flex items-center justify-between gap-3 text-xs border-t border-white/5 pt-2 mt-1">
                     {/* Unit selector */}
-                    <div className="flex bg-slate-950 rounded-lg p-0.5 border border-white/5 shrink-0">
+                    <div className="flex bg-slate-950 rounded-lg p-1 border border-white/5 shrink-0">
                       <button
                         type="button"
                         onClick={() => toggleUnitType(item.productId, 'BOX')}
-                        className={`px-1.5 py-0.5 rounded flex items-center space-x-0.5 transition ${item.unitType === 'BOX' ? 'bg-brand-500 text-white font-bold border-brand-400 shadow-sm' : 'text-gray-400 border-transparent hover:text-gray-200'}`}
+                        className={`px-2.5 py-1.5 rounded-md flex items-center space-x-1 transition ${item.unitType === 'BOX' ? 'bg-brand-500 text-white font-bold border-brand-400 shadow-sm' : 'text-gray-400 border-transparent hover:text-gray-200'}`}
                       >
-                        <Box size={10} />
-                        <span className="text-[9px]">Quti</span>
+                        <Box size={14} />
+                        <span className="text-xs">Quti</span>
                       </button>
                       <button
                         type="button"
                         onClick={() => toggleUnitType(item.productId, 'PIECE')}
-                        className={`px-1.5 py-0.5 rounded flex items-center space-x-0.5 transition ${item.unitType === 'PIECE' ? 'bg-brand-500 text-white font-bold border-brand-400 shadow-sm' : 'text-gray-400 border-transparent hover:text-gray-200'}`}
+                        className={`px-2.5 py-1.5 rounded-md flex items-center space-x-1 transition ${item.unitType === 'PIECE' ? 'bg-brand-500 text-white font-bold border-brand-400 shadow-sm' : 'text-gray-400 border-transparent hover:text-gray-200'}`}
                       >
-                        <Tag size={10} />
-                        <span className="text-[9px]">Dona</span>
+                        <Tag size={14} />
+                        <span className="text-xs">Dona</span>
                       </button>
                     </div>
 
                     {/* Quantity counter */}
-                    <div className="flex items-center space-x-1 shrink-0">
+                    <div className="flex items-center space-x-2 shrink-0">
                       <button
                         type="button"
                         onClick={() => updateCartItemQuantity(item.productId, item.quantity - 1)}
-                        className="bg-slate-800 hover:bg-slate-700 active:bg-slate-600 text-white font-bold w-5 h-5 rounded-md border border-white/10 flex items-center justify-center transition text-[10px]"
+                        className="bg-slate-800 hover:bg-slate-700 active:bg-slate-600 text-white font-bold w-9 h-9 rounded-lg border border-white/10 flex items-center justify-center transition text-base shadow-sm"
                       >
                         -
                       </button>
-                      <span className="font-mono font-bold text-white w-4 text-center text-xs">{item.quantity}</span>
+                      <span className="font-mono font-bold text-white w-6 text-center text-sm">{item.quantity}</span>
                       <button
                         type="button"
                         onClick={() => updateCartItemQuantity(item.productId, item.quantity + 1)}
-                        className="bg-slate-800 hover:bg-slate-700 active:bg-slate-600 text-white font-bold w-5 h-5 rounded-md border border-white/10 flex items-center justify-center transition text-[10px]"
+                        className="bg-slate-800 hover:bg-slate-700 active:bg-slate-600 text-white font-bold w-9 h-9 rounded-lg border border-white/10 flex items-center justify-center transition text-base shadow-sm"
                       >
                         +
                       </button>
                     </div>
 
                     {/* Total Subtotal */}
-                    <span className="font-black text-white text-xs whitespace-nowrap text-right flex-1 truncate">
+                    <span className="font-black text-white text-sm sm:text-base whitespace-nowrap text-right flex-1 truncate">
                       {subtotal.toLocaleString()} s.
                     </span>
                   </div>
@@ -454,15 +453,15 @@ export const POSPage = () => {
         </div>
 
         {/* Digital Billing Invoice Checkout Summary */}
-        <div className="p-2 sm:p-3 pb-20 lg:pb-2 border-t border-white/5 bg-slate-950/60 space-y-1.5 rounded-b-2xl">
-          <div className="space-y-1 my-0.5">
-            <div className="flex justify-between text-xs text-gray-400">
-              <span>Jami summa:</span>
-              <span className="font-bold text-white text-xs sm:text-sm">{totalAmount.toLocaleString()} so'm</span>
+        <div className="p-3 sm:p-4 pb-20 lg:pb-3 border-t border-white/5 bg-slate-950/80 space-y-3 rounded-b-2xl">
+          <div className="space-y-2 my-1">
+            <div className="flex justify-between items-center text-sm text-gray-300">
+              <span className="font-medium">Jami summa:</span>
+              <span className="font-black text-white text-base sm:text-lg">{totalAmount.toLocaleString()} so'm</span>
             </div>
 
             {cart.length > 0 && (
-              <div className="flex justify-between text-[10px] text-gray-500 border-b border-white/5 pb-1">
+              <div className="flex justify-between text-xs text-gray-500 border-b border-white/5 pb-2">
                 <span>Sof Foyda:</span>
                 <span className={`font-semibold ${netProfit >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>
                   {netProfit >= 0 ? '+' : ''}{netProfit.toLocaleString()} so'm
@@ -470,32 +469,32 @@ export const POSPage = () => {
               </div>
             )}
 
-            <div className="flex items-center justify-between text-xs py-0.5">
-              <span className="text-gray-400">Naqd to'lov:</span>
-              <div className="flex items-center space-x-1 border border-white/10 rounded-md px-1 bg-slate-900 w-[100px] sm:w-[120px] focus-within:border-brand-500 transition">
+            <div className="flex items-center justify-between text-sm py-1">
+              <span className="text-gray-300 font-medium">Naqd to'lov:</span>
+              <div className="flex items-center space-x-2 border border-white/10 rounded-xl px-2 py-1 bg-slate-900 w-[140px] sm:w-[160px] focus-within:border-brand-500 transition shadow-inner">
                 <input
                   type="text"
-                  className="bg-transparent text-right border-0 p-0.5 text-xs font-bold text-white focus:ring-0 w-full"
+                  className="bg-transparent text-right border-0 p-1 text-sm font-bold text-white focus:ring-0 w-full"
                   value={paidAmount}
                   onChange={(e) => setPaidAmount(formatNumberWithSpaces(e.target.value))}
                   placeholder="0"
                 />
-                <span className="text-[10px] font-semibold text-gray-500 shrink-0">so'm</span>
+                <span className="text-xs font-semibold text-gray-500 shrink-0">so'm</span>
               </div>
             </div>
 
-            <div className="flex justify-between text-xs font-bold border-t border-white/10 pt-1.5 mt-0.5">
+            <div className="flex justify-between text-sm font-bold border-t border-white/10 pt-3 mt-1">
               <span className="text-brand-300">Nasiya (Qarz):</span>
-              <span className="text-brand-400">{debtAmount.toLocaleString()} so'm</span>
+              <span className="text-brand-400 text-base">{debtAmount.toLocaleString()} so'm</span>
             </div>
           </div>
 
           <button
             onClick={handleCheckout}
             disabled={cart.length === 0 || checkoutLoading}
-            className="w-full bg-brand-500 hover:bg-brand-600 disabled:opacity-40 text-white py-2 sm:py-2.5 rounded-lg font-bold transition flex items-center justify-center space-x-1 text-xs border border-brand-400 shadow-lg cursor-pointer"
+            className="w-full py-4 text-base font-bold bg-blue-600 hover:bg-blue-500 active:scale-95 disabled:opacity-40 disabled:active:scale-100 text-white rounded-xl transition-all flex items-center justify-center space-x-2 shadow-lg shadow-blue-500/20 border border-blue-500 cursor-pointer"
           >
-            <CreditCard size={14} />
+            <CreditCard size={18} />
             <span>{checkoutLoading ? 'Rasmiylashtirilmoqda...' : 'Yuk xati rasmiylashtirish'}</span>
           </button>
         </div>

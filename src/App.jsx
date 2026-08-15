@@ -6,7 +6,7 @@ import { StoresPage } from './pages/StoresPage';
 import { InventoryPage } from './pages/InventoryPage';
 import { AnalyticsPage } from './pages/AnalyticsPage';
 import { Login } from './pages/Login';
-import { ShoppingCart, Users, Layers, Award, BarChart3, Download, Maximize2, Minimize2 } from 'lucide-react';
+import { ShoppingCart, Users, Layers, Award, BarChart3, Download, Maximize2, Minimize2, LogOut } from 'lucide-react';
 
 const allowedTabs = {
   boss: ['analytics', 'inventory', 'stores'],
@@ -171,38 +171,49 @@ function App() {
       />
       {/* Header Bar */}
       <header className="glass-panel border-b border-white/5 sticky top-0 z-40">
-        <div className="max-w-7xl mx-auto px-3 sm:px-6 py-3 sm:py-4 flex flex-col lg:flex-row justify-between items-center gap-3 sm:gap-4">
-          <div className="flex items-center space-x-3 w-full lg:w-auto justify-between lg:justify-start">
-            <div className="flex items-center space-x-3">
-              <div className="bg-gradient-to-tr from-brand-600 to-brand-400 p-2 sm:p-2.5 rounded-xl shadow-lg shadow-brand-500/20 text-white shrink-0">
-                <Award size={20} />
+        <div className="max-w-7xl mx-auto px-3 py-2 sm:px-6 sm:py-3 flex flex-col gap-2.5">
+          
+          {/* Top Row: Logo & User/Logout */}
+          <div className="flex items-center justify-between w-full">
+            <div className="flex items-center space-x-2.5">
+              <div className="bg-gradient-to-tr from-brand-600 to-brand-400 p-1.5 sm:p-2 rounded-xl shadow-lg shadow-brand-500/20 text-white shrink-0">
+                <Award size={18} />
               </div>
               <div>
-                <h1 className="text-base sm:text-lg font-bold text-white tracking-wide bg-gradient-to-r from-white via-gray-200 to-gray-400 bg-clip-text text-transparent">
+                <h1 className="text-sm sm:text-base font-bold text-white tracking-wide bg-gradient-to-r from-white via-gray-200 to-gray-400 bg-clip-text text-transparent leading-tight">
                   SweetFlow Ulgurji B2B
                 </h1>
-                <p className="text-[9px] sm:text-[10px] text-brand-300 font-semibold tracking-widest uppercase">
+                <p className="text-[9px] text-brand-300 font-semibold tracking-widest uppercase leading-tight">
                   Distributsiya Tizimi
                 </p>
               </div>
             </div>
-            {/* User Profile info for mobile */}
-            <div className="flex flex-col text-right sm:hidden">
-              <span className="text-white text-xs font-bold">{username}</span>
-              <span className="text-[8px] text-brand-300 font-bold uppercase tracking-wider">{userRole}</span>
+            
+            <div className="flex items-center gap-2.5">
+              <div className="flex flex-col text-right">
+                <span className="text-white text-[11px] sm:text-xs font-bold leading-tight">{username}</span>
+                <span className="text-[8px] text-brand-300 font-bold uppercase tracking-wider leading-tight">{userRole}</span>
+              </div>
+              <button
+                onClick={handleLogout}
+                className="p-1.5 sm:p-2 bg-red-950/40 hover:bg-red-900/60 text-red-400 hover:text-red-300 rounded-lg transition border border-red-500/20 hover:border-red-500/40 shadow-sm cursor-pointer shrink-0"
+                title="Chiqish"
+              >
+                <LogOut size={16} />
+              </button>
             </div>
           </div>
 
-          {/* Navigation Tabs - Responsive Grid on Mobile, Flex on Desktop */}
-          <div className="flex flex-col sm:flex-row items-center gap-2 sm:gap-4 w-full lg:w-auto">
-            <nav className="grid grid-cols-2 sm:grid-cols-4 lg:flex gap-1 min-[500px]:gap-2 w-full lg:w-auto bg-slate-950/60 p-1 rounded-2xl border border-white/5">
+          {/* Bottom Row: Navigation & Actions */}
+          <div className="flex items-center justify-between w-full gap-2">
+            <nav className="grid grid-cols-3 gap-1.5 bg-slate-950/60 p-1 rounded-xl border border-white/5 flex-1 max-w-md">
               {isTabAllowed('pos') && (
                 <button
                   onClick={() => setCurrentTab('pos')}
-                  className={`flex items-center justify-center gap-1.5 sm:gap-2 px-1.5 min-[500px]:px-4 py-2 min-[500px]:py-2.5 rounded-xl text-[10px] min-[500px]:text-xs font-semibold tracking-wide transition border w-full lg:w-auto min-h-[40px] cursor-pointer ${
+                  className={`flex flex-col sm:flex-row items-center justify-center gap-1 sm:gap-1.5 py-1.5 sm:py-2 rounded-lg text-[9px] sm:text-[10px] font-semibold tracking-wide transition border cursor-pointer ${
                     currentTab === 'pos'
-                      ? 'bg-brand-500 text-white shadow-lg shadow-brand-500/10 font-bold border-brand-400'
-                      : 'text-gray-400 hover:text-gray-200 border-white/5 hover:bg-white/5'
+                      ? 'bg-brand-500 text-white shadow-md shadow-brand-500/10 font-bold border-brand-400'
+                      : 'text-gray-400 hover:text-gray-200 border-transparent hover:bg-white/5'
                   }`}
                 >
                   <ShoppingCart size={14} className="shrink-0" />
@@ -213,10 +224,10 @@ function App() {
               {isTabAllowed('stores') && (
                 <button
                   onClick={() => setCurrentTab('stores')}
-                  className={`flex items-center justify-center gap-1.5 sm:gap-2 px-1.5 min-[500px]:px-4 py-2 min-[500px]:py-2.5 rounded-xl text-[10px] min-[500px]:text-xs font-semibold tracking-wide transition border w-full lg:w-auto min-h-[40px] cursor-pointer ${
+                  className={`flex flex-col sm:flex-row items-center justify-center gap-1 sm:gap-1.5 py-1.5 sm:py-2 rounded-lg text-[9px] sm:text-[10px] font-semibold tracking-wide transition border cursor-pointer ${
                     currentTab === 'stores'
-                      ? 'bg-brand-500 text-white shadow-lg shadow-brand-500/10 font-bold border-brand-400'
-                      : 'text-gray-400 hover:text-gray-200 border-white/5 hover:bg-white/5'
+                      ? 'bg-brand-500 text-white shadow-md shadow-brand-500/10 font-bold border-brand-400'
+                      : 'text-gray-400 hover:text-gray-200 border-transparent hover:bg-white/5'
                   }`}
                 >
                   <Users size={14} className="shrink-0" />
@@ -227,10 +238,10 @@ function App() {
               {isTabAllowed('inventory') && (
                 <button
                   onClick={() => setCurrentTab('inventory')}
-                  className={`flex items-center justify-center gap-1.5 sm:gap-2 px-1.5 min-[500px]:px-4 py-2 min-[500px]:py-2.5 rounded-xl text-[10px] min-[500px]:text-xs font-semibold tracking-wide transition border w-full lg:w-auto min-h-[40px] cursor-pointer ${
+                  className={`flex flex-col sm:flex-row items-center justify-center gap-1 sm:gap-1.5 py-1.5 sm:py-2 rounded-lg text-[9px] sm:text-[10px] font-semibold tracking-wide transition border cursor-pointer ${
                     currentTab === 'inventory'
-                      ? 'bg-brand-500 text-white shadow-lg shadow-brand-500/10 font-bold border-brand-400'
-                      : 'text-gray-400 hover:text-gray-200 border-white/5 hover:bg-white/5'
+                      ? 'bg-brand-500 text-white shadow-md shadow-brand-500/10 font-bold border-brand-400'
+                      : 'text-gray-400 hover:text-gray-200 border-transparent hover:bg-white/5'
                   }`}
                 >
                   <Layers size={14} className="shrink-0" />
@@ -241,10 +252,10 @@ function App() {
               {isTabAllowed('analytics') && (
                 <button
                   onClick={() => setCurrentTab('analytics')}
-                  className={`flex items-center justify-center gap-1.5 sm:gap-2 px-1.5 min-[500px]:px-4 py-2 min-[500px]:py-2.5 rounded-xl text-[10px] min-[500px]:text-xs font-semibold tracking-wide transition border w-full lg:w-auto min-h-[40px] cursor-pointer ${
+                  className={`flex flex-col sm:flex-row items-center justify-center gap-1 sm:gap-1.5 py-1.5 sm:py-2 rounded-lg text-[9px] sm:text-[10px] font-semibold tracking-wide transition border cursor-pointer ${
                     currentTab === 'analytics'
-                      ? 'bg-brand-500 text-white shadow-lg shadow-brand-500/10 font-bold border-brand-400'
-                      : 'text-gray-400 hover:text-gray-200 border-white/5 hover:bg-white/5'
+                      ? 'bg-brand-500 text-white shadow-md shadow-brand-500/10 font-bold border-brand-400'
+                      : 'text-gray-400 hover:text-gray-200 border-transparent hover:bg-white/5'
                   }`}
                 >
                   <BarChart3 size={14} className="shrink-0" />
@@ -253,52 +264,24 @@ function App() {
               )}
             </nav>
 
-            <div className="flex items-center gap-2 w-full sm:w-auto justify-end sm:justify-start">
+            <div className="flex items-center gap-1.5 shrink-0">
               <button
                 onClick={toggleFullScreen}
-                className="hidden min-[500px]:flex items-center justify-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-2.5 bg-slate-900/60 hover:bg-slate-800/80 text-gray-300 hover:text-white rounded-xl text-xs font-bold tracking-wide transition border border-white/5 hover:border-white/10 shadow-lg min-h-[40px] cursor-pointer"
+                className="hidden sm:flex items-center justify-center p-2 bg-slate-900/60 hover:bg-slate-800/80 text-gray-300 hover:text-white rounded-lg transition border border-white/5 hover:border-white/10 shadow-sm cursor-pointer"
                 title={isFullscreen ? "Kichik ekran" : "To'liq ekran"}
               >
-                {isFullscreen ? <Minimize2 size={14} className="shrink-0" /> : <Maximize2 size={14} className="shrink-0" />}
-                <span className="hidden sm:inline">{isFullscreen ? "Kichik ekran" : "To'liq ekran"}</span>
+                {isFullscreen ? <Minimize2 size={16} /> : <Maximize2 size={16} />}
               </button>
-
-              {currentTab === 'pos' && (
-                <button
-                  onClick={() => {
-                    const event = new CustomEvent('toggle-pos-view');
-                    window.dispatchEvent(event);
-                  }}
-                  className="flex min-[500px]:hidden items-center justify-center gap-1.5 px-3 py-2 bg-brand-500 hover:bg-brand-600 text-white rounded-xl text-xs font-bold tracking-wide transition border border-brand-400 shadow-lg min-h-[40px] cursor-pointer"
-                >
-                  <ShoppingCart size={14} className="shrink-0" />
-                  <span>Katalog / Savat</span>
-                </button>
-              )}
 
               {!isInstalled && (
                 <button
                   onClick={handleInstallClick}
-                  className="flex items-center justify-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-2.5 bg-gradient-to-r from-brand-600 to-brand-500 hover:from-brand-500 hover:to-brand-400 text-white rounded-xl text-xs font-bold tracking-wide transition border border-brand-400 shadow-lg shadow-brand-500/20 min-h-[40px] animate-pulse cursor-pointer"
+                  className="flex items-center justify-center p-2 bg-gradient-to-r from-brand-600 to-brand-500 hover:from-brand-500 hover:to-brand-400 text-white rounded-lg transition border border-brand-400 shadow-sm animate-pulse cursor-pointer"
+                  title="O'rnatish"
                 >
-                  <Download size={14} className="shrink-0" />
-                  <span className="hidden sm:inline">O'rnatish</span>
+                  <Download size={16} />
                 </button>
               )}
-
-              {/* User Profile and Logout for Desktop */}
-              <div className="flex items-center gap-3 pl-2 border-l border-white/10 ml-1">
-                <div className="flex flex-col text-right hidden sm:flex">
-                  <span className="text-white text-xs font-bold">{username}</span>
-                  <span className="text-[9px] text-brand-300 font-bold uppercase tracking-wider">{userRole}</span>
-                </div>
-                <button
-                  onClick={handleLogout}
-                  className="flex items-center justify-center px-2 py-2 min-[500px]:px-3 min-[500px]:py-2.5 bg-red-950/40 hover:bg-red-900/60 text-red-400 hover:text-red-300 rounded-xl text-[10px] min-[500px]:text-xs font-bold tracking-wide transition border border-red-500/20 hover:border-red-500/40 shadow-lg min-h-[36px] min-[500px]:min-h-[40px] cursor-pointer"
-                >
-                  Chiqish
-                </button>
-              </div>
             </div>
           </div>
         </div>

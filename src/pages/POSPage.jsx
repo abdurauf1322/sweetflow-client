@@ -209,29 +209,43 @@ export const POSPage = () => {
     <div className="flex flex-col lg:flex-row gap-2 sm:gap-3 lg:gap-4 p-1.5 sm:p-3 min-h-[100dvh] lg:min-h-0 lg:h-[calc(100vh-120px)] overflow-y-auto lg:overflow-hidden pb-24 lg:pb-4">
       {/* LEFT: Products Panel */}
       <div className={`flex-1 w-full lg:w-2/3 flex flex-col space-y-2 sm:space-y-3 min-h-0 ${activeMobileTab === 'cart' ? 'hidden min-[500px]:flex' : 'flex'}`}>
-        {/* Search controls */}
-        <div className="relative max-w-md w-full md:w-96 shrink-0">
-          <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400">
-            <Search size={16} />
+        {/* Search controls & Mobile Toggle */}
+        <div className="flex gap-2 shrink-0">
+          <div className="relative max-w-md w-full md:w-96 shrink-0 flex-1">
+            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400">
+              <Search size={16} />
+            </div>
+            
+            <input
+              type="text"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              placeholder="Mahsulot nomi bo'yicha qidirish..."
+              className="w-full pl-9 pr-9 py-2 sm:py-2.5 bg-slate-900/90 border border-slate-700/80 rounded-xl text-slate-100 placeholder-slate-400 text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition shadow-inner min-h-[40px]"
+            />
+            
+            {searchQuery && (
+              <button
+                type="button"
+                onClick={() => setSearchQuery('')}
+                className="absolute inset-y-0 right-0 pr-3 flex items-center text-slate-400 hover:text-slate-200 transition cursor-pointer"
+              >
+                <X size={14} />
+              </button>
+            )}
           </div>
           
-          <input
-            type="text"
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            placeholder="Mahsulot nomi bo'yicha qidirish..."
-            className="w-full pl-9 pr-9 py-2 sm:py-2.5 bg-slate-900/90 border border-slate-700/80 rounded-xl text-slate-100 placeholder-slate-400 text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition shadow-inner min-h-[40px]"
-          />
-          
-          {searchQuery && (
-            <button
-              type="button"
-              onClick={() => setSearchQuery('')}
-              className="absolute inset-y-0 right-0 pr-3 flex items-center text-slate-400 hover:text-slate-200 transition cursor-pointer"
-            >
-              <X size={14} />
-            </button>
-          )}
+          {/* Mobile Catalog / Cart toggle button moved from App.jsx */}
+          <button
+            onClick={() => {
+              const event = new CustomEvent('toggle-pos-view');
+              window.dispatchEvent(event);
+            }}
+            className="flex min-[500px]:hidden items-center justify-center gap-1.5 px-3 py-2 bg-brand-500 hover:bg-brand-600 text-white rounded-xl text-[10px] font-bold tracking-wide transition border border-brand-400 shadow-lg min-h-[40px] cursor-pointer shrink-0"
+          >
+            <ShoppingCart size={14} className="shrink-0" />
+            <span>Savat / Katalog</span>
+          </button>
         </div>
 
         {/* Products Grid list */}

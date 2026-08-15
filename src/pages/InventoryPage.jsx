@@ -62,14 +62,25 @@ export const InventoryPage = () => {
 
   const handleImageUpload = (e, isEdit = false) => {
     const file = e.target.files[0];
-    if (!file) return;
-
-    if (isEdit) {
-      setEditImageFile(file);
-      setEditImagePreview(URL.createObjectURL(file));
+    if (file) {
+      if (isEdit) {
+        setEditImageFile(file);
+      } else {
+        setImageFile(file);
+      }
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        if (isEdit) {
+          setEditImagePreview(reader.result);
+        } else {
+          setImagePreview(reader.result);
+        }
+      };
+      reader.readAsDataURL(file);
     } else {
-      setImageFile(file);
-      setImagePreview(URL.createObjectURL(file));
+      if (!isEdit) {
+        setImagePreview('');
+      }
     }
   };
 
@@ -790,10 +801,18 @@ export const InventoryPage = () => {
                   {isUploading && <span className="text-xs text-brand-400">Yuklanmoqda...</span>}
                   {imagePreview && (
                     <img 
-                      src={getImageUrl(imagePreview)} 
+                      src={imagePreview.startsWith('data:') ? imagePreview : (getImageUrl(imagePreview) || undefined)} 
                       alt="Preview" 
                       className="h-20 w-20 object-cover rounded-lg border border-white/10" 
-                      onError={(e) => { e.target.onerror = null; e.target.src = fallbackImage; }}
+                      onError={(e) => {
+                        if (!imagePreview.startsWith('data:') && !getImageUrl(imagePreview)) {
+                          e.target.onerror = null;
+                          e.target.src = fallbackImage;
+                        } else {
+                          e.target.onerror = null;
+                          e.target.src = fallbackImage;
+                        }
+                      }}
                     />
                   )}
                 </div>
@@ -1000,10 +1019,18 @@ export const InventoryPage = () => {
                   {isUploading && <span className="text-xs text-brand-400">Yuklanmoqda...</span>}
                   {editImagePreview && (
                     <img 
-                      src={getImageUrl(editImagePreview)} 
+                      src={editImagePreview.startsWith('data:') ? editImagePreview : (getImageUrl(editImagePreview) || undefined)} 
                       alt="Preview" 
                       className="h-20 w-20 object-cover rounded-lg border border-white/10" 
-                      onError={(e) => { e.target.onerror = null; e.target.src = fallbackImage; }}
+                      onError={(e) => {
+                        if (!editImagePreview.startsWith('data:') && !getImageUrl(editImagePreview)) {
+                          e.target.onerror = null;
+                          e.target.src = fallbackImage;
+                        } else {
+                          e.target.onerror = null;
+                          e.target.src = fallbackImage;
+                        }
+                      }}
                     />
                   )}
                 </div>

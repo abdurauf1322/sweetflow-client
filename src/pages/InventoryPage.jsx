@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useProducts } from '../hooks/useProducts';
 import api from '../services/api';
-import { formatNumberWithSpaces, parseNumberFromSpaces, getImageUrl } from '../utils/format';
+import { formatNumberWithSpaces, parseNumberFromSpaces, getImageUrl, fallbackImage } from '../utils/format';
 
 import { Search, Plus, Tag, Box, AlertTriangle, Layers, X, ClipboardList, Trash2, Pencil, DollarSign } from 'lucide-react';
 import toast from 'react-hot-toast';
@@ -450,7 +450,7 @@ export const InventoryPage = () => {
                         <div className="flex items-center space-x-3">
                           <div className="h-10 w-10 shrink-0 rounded-lg overflow-hidden bg-slate-900 border border-white/5 flex items-center justify-center">
                             {product.imageUrl ? (
-                              <img src={getImageUrl(product.imageUrl)} alt={product.name} className="h-full w-full object-cover" />
+                              <img src={getImageUrl(product.imageUrl)} alt={product.name} className="h-full w-full object-cover" onError={(e) => { e.target.onerror = null; e.target.src = fallbackImage; }} />
                             ) : (
                               <Box size={16} className="text-gray-600" />
                             )}
@@ -525,7 +525,7 @@ export const InventoryPage = () => {
                     <div className="flex items-center space-x-3 min-w-0 flex-1">
                       <div className="h-10 w-10 shrink-0 rounded-lg overflow-hidden bg-slate-900 border border-white/5 flex items-center justify-center">
                         {product.imageUrl ? (
-                          <img src={getImageUrl(product.imageUrl)} alt={product.name} className="h-full w-full object-cover" />
+                          <img src={getImageUrl(product.imageUrl)} alt={product.name} className="h-full w-full object-cover" onError={(e) => { e.target.onerror = null; e.target.src = fallbackImage; }} />
                         ) : (
                           <Box size={16} className="text-gray-600" />
                         )}
@@ -793,6 +793,7 @@ export const InventoryPage = () => {
                       src={getImageUrl(imagePreview)} 
                       alt="Preview" 
                       className="h-20 w-20 object-cover rounded-lg border border-white/10" 
+                      onError={(e) => { e.target.onerror = null; e.target.src = fallbackImage; }}
                     />
                   )}
                 </div>
@@ -1002,6 +1003,7 @@ export const InventoryPage = () => {
                       src={getImageUrl(editImagePreview)} 
                       alt="Preview" 
                       className="h-20 w-20 object-cover rounded-lg border border-white/10" 
+                      onError={(e) => { e.target.onerror = null; e.target.src = fallbackImage; }}
                     />
                   )}
                 </div>

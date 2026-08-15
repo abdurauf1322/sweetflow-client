@@ -4,7 +4,7 @@ import { useStores } from '../hooks/useStores';
 import { useOrders } from '../hooks/useOrders';
 import { Search, ShoppingCart, Trash2, CheckCircle2, User, CreditCard, Tag, Box, X, Eye } from 'lucide-react';
 import toast from 'react-hot-toast';
-import { formatNumberWithSpaces, parseNumberFromSpaces, getImageUrl } from '../utils/format';
+import { formatNumberWithSpaces, parseNumberFromSpaces, getImageUrl, fallbackImage } from '../utils/format';
 
 
 export const POSPage = () => {
@@ -361,7 +361,7 @@ export const POSPage = () => {
                     <div className="flex items-center space-x-1.5 min-w-0">
                       <div className="w-8 h-8 rounded-lg overflow-hidden bg-slate-900 border border-white/5 flex items-center justify-center shrink-0">
                         {item.imageUrl ? (
-                          <img src={getImageUrl(item.imageUrl)} alt={item.name} className="h-full w-full object-cover" />
+                          <img src={getImageUrl(item.imageUrl)} alt={item.name} className="h-full w-full object-cover" onError={(e) => { e.target.onerror = null; e.target.src = fallbackImage; }} />
                         ) : (
                           <Box size={12} className="text-gray-600" />
                         )}
@@ -538,6 +538,7 @@ export const POSPage = () => {
                   src={getImageUrl(previewProduct.imageUrl)} 
                   alt={previewProduct.name}
                   className="w-full h-full object-cover"
+                  onError={(e) => { e.target.onerror = null; e.target.src = fallbackImage; }}
                 />
               ) : (
                 <div className="flex flex-col items-center justify-center text-gray-500">

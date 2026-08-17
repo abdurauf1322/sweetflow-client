@@ -58,10 +58,20 @@ export const POSPage = () => {
   // Selected store details
   const selectedStore = stores.find(s => s.id === selectedStoreId);
 
-  // Filtered products list
-  const filteredProducts = products.filter(product =>
-    product.name.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  // Filtered and sorted products list
+  const filteredProducts = products
+    .filter(product => product.name.toLowerCase().includes(searchQuery.toLowerCase()))
+    .sort((a, b) => {
+      const stockA = a.stockCount || 0;
+      const stockB = b.stockCount || 0;
+      
+      // 1. Zaxirasi borlarni birinchi, tugaganlarni (0) oxiriga surish
+      if (stockA > 0 && stockB === 0) return -1;
+      if (stockA === 0 && stockB > 0) return 1;
+      
+      // 2. Ikkalasi ham bor yoki yo'q bo'lsa, nomi bo'yicha tartiblash
+      return a.name.localeCompare(b.name);
+    });
 
   // Add to cart logic
   const addToCart = (product) => {

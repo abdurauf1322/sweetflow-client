@@ -14,12 +14,12 @@ export const POSPage = () => {
   const { createOrder, loading: checkoutLoading, error: checkoutError } = useOrders();
 
   const [selectedStoreId, setSelectedStoreId] = useState(() => {
-    return localStorage.getItem('sweetflow_pos_store_id') || '';
+    return localStorage.getItem('qandchi_bola_pos_store_id') || '';
   });
   const [searchQuery, setSearchQuery] = useState('');
   const [cart, setCart] = useState(() => {
     try {
-      const savedCart = localStorage.getItem('sweetflow_pos_cart');
+      const savedCart = localStorage.getItem('qandchi_bola_pos_cart');
       return savedCart ? JSON.parse(savedCart) : [];
     } catch (err) {
       return [];
@@ -42,11 +42,11 @@ export const POSPage = () => {
 
   // Sync to localStorage
   useEffect(() => {
-    localStorage.setItem('sweetflow_pos_store_id', selectedStoreId);
+    localStorage.setItem('qandchi_bola_pos_store_id', selectedStoreId);
   }, [selectedStoreId]);
 
   useEffect(() => {
-    localStorage.setItem('sweetflow_pos_cart', JSON.stringify(cart));
+    localStorage.setItem('qandchi_bola_pos_cart', JSON.stringify(cart));
   }, [cart]);
 
   // Load stores and products

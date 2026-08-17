@@ -18,6 +18,7 @@ export const InvoicePrint = ({ order, store, user }) => {
 
   return (
     <div className="hidden print:block print:w-full bg-white text-black text-sm p-4 print:p-0">
+      <div className="text-center font-bold text-xl mb-1 uppercase">"Qandchi Bola" Distribyutsiya</div>
       <div className="text-center font-bold text-lg mb-4 uppercase">Yuk xati (Nakladnoy) ZAKAZ №{order.id.slice(-6)}</div>
       
       {/* Header Info */}

@@ -120,7 +120,7 @@ export function Login({ onLoginSuccess }) {
           </form>
         </div>
         <p className="text-[10px] text-slate-500 dark:text-slate-400 dark:text-gray-600 text-center mt-6 tracking-wide">
-          © 2026 Qandchi Bola Wholesale Distribution System.
+          © 2026 Qandchi Bola Wholesale Distribution System. Raqamli Yuk Xatlari va Nasiya CRM Platformasi.
         </p>
       </div>
     </div>

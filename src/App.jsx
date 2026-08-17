@@ -159,7 +159,7 @@ function AppContent({ userRole, username, handleLogout, isInstalled, handleInsta
                   Qandchi Bola
                 </h1>
                 <p className="text-[10px] sm:text-xs text-slate-500 dark:text-slate-400 font-semibold tracking-widest uppercase leading-tight mt-0.5">
-                  Distributsiya
+                  Distribyutsiya
                 </p>
               </div>
             </div>

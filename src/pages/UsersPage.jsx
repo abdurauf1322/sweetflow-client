@@ -33,9 +33,12 @@ export const UsersPage = () => {
       const response = await api.get('/users', { params: { period } });
       if (response.data?.success) {
         setUsers(response.data.data);
+      } else {
+        setUsers([]);
       }
     } catch (error) {
       toast.error("Xodimlarni yuklashda xatolik yuz berdi");
+      setUsers([]);
     } finally {
       setLoading(false);
     }
@@ -218,8 +221,8 @@ export const UsersPage = () => {
         ))}
       </div>
 
-      {/* Table */}
-      <div className="glass-panel p-4 sm:p-6 rounded-2xl border border-slate-200 dark:border-white/5 overflow-hidden">
+      {/* Desktop Table */}
+      <div className="hidden md:block glass-panel p-4 sm:p-6 rounded-2xl border border-slate-200 dark:border-white/5 overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full text-sm text-left">
             <thead className="text-xs text-slate-500 dark:text-gray-400 uppercase bg-slate-100/50 dark:bg-slate-900/40  border-b border-slate-200 dark:border-white/5">
@@ -299,6 +302,46 @@ export const UsersPage = () => {
             </tbody>
           </table>
         </div>
+      </div>
+
+      {/* Mobile Cards */}
+      <div className="md:hidden space-y-3">
+        {loading ? (
+          <div className="text-center text-slate-500 dark:text-gray-400 py-8 animate-pulse">Yuklanmoqda...</div>
+        ) : users.length === 0 ? (
+          <div className="text-center text-slate-500 dark:text-gray-400 py-8">Xodimlar topilmadi</div>
+        ) : (
+          users.map((user) => (
+            <div key={user.id} className="glass-panel p-4 rounded-2xl border border-slate-200 dark:border-white/5 space-y-3">
+              <div className="flex justify-between items-start">
+                <div>
+                  <div className="font-bold text-slate-900 dark:text-white text-base">{user.name}</div>
+                  <div className="text-xs text-slate-500 dark:text-gray-500 mb-1">@{user.username}</div>
+                  {getRoleBadge(user.role)}
+                </div>
+                <div className="flex gap-1.5">
+                  <button onClick={() => handleOpenSalesHistory(user)} className="p-2 bg-brand-500/10 text-brand-400 rounded-xl" title="Savdo tarixi"><Calendar size={18} /></button>
+                  <button onClick={() => handleOpenModal(user)} className="p-2 bg-blue-500/10 text-blue-400 rounded-xl" title="Tahrirlash"><Edit2 size={18} /></button>
+                  <button onClick={() => handleDelete(user.id)} className="p-2 bg-red-500/10 text-red-400 rounded-xl" title="O'chirish"><Trash2 size={18} /></button>
+                </div>
+              </div>
+              <div className="grid grid-cols-2 gap-2 bg-slate-50 dark:bg-slate-900/40 p-3 rounded-xl border border-slate-200 dark:border-white/5 text-sm">
+                <div>
+                  <div className="text-[10px] text-slate-500 dark:text-gray-400 uppercase font-semibold">Tushum ({user.salesCount} ta)</div>
+                  <div className="font-bold text-brand-500">{formatMoney(user.salesAmount)}</div>
+                </div>
+                <div className="text-right">
+                  <div className="text-[10px] text-emerald-500 uppercase font-semibold">Naqd to'lov</div>
+                  <div className="font-bold text-emerald-500">{formatMoney(user.paidAmount || 0)}</div>
+                </div>
+                <div className="col-span-2 pt-2 mt-1 border-t border-slate-200 dark:border-white/10 text-right">
+                  <div className="text-[10px] text-red-400 uppercase font-semibold">Nasiya (Qarz)</div>
+                  <div className="font-bold text-red-500">{formatMoney(user.debtAmount || 0)}</div>
+                </div>
+              </div>
+            </div>
+          ))
+        )}
       </div>
 
       {/* Create/Edit User Modal */}

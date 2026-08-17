@@ -145,25 +145,58 @@ function AppContent({ userRole, username, handleLogout, isInstalled, handleInsta
 
       {/* Header Bar */}
       <header className="bg-white/90 dark:bg-slate-900/90 border-b border-slate-200 dark:border-slate-800 sticky top-0 z-40 backdrop-blur-md transition-colors duration-200">
-        <div className="max-w-7xl mx-auto px-4 py-3 sm:px-8 sm:py-5 flex items-center justify-between gap-4">
-
-          {/* Logo */}
-          <div className="flex items-center space-x-3 shrink-0">
-            <div className="bg-gradient-to-tr from-brand-600 to-brand-400 p-2 sm:p-2.5 rounded-xl shadow-lg shadow-brand-500/20 text-white shrink-0">
-              <Award size={28} />
+        <div className="max-w-7xl mx-auto px-3 py-2 sm:px-8 sm:py-5 flex flex-col sm:flex-row items-center justify-between gap-3 sm:gap-4">
+          
+          {/* Top Row: Logo + Right Actions (on Mobile) / Left side (on Desktop) */}
+          <div className="flex items-center justify-between w-full sm:w-auto">
+            {/* Logo */}
+            <div className="flex items-center space-x-2 sm:space-x-3 shrink-0">
+              <div className="bg-gradient-to-tr from-brand-600 to-brand-400 p-2 sm:p-2.5 rounded-xl shadow-lg shadow-brand-500/20 text-white shrink-0">
+                <Award size={24} className="sm:w-7 sm:h-7" />
+              </div>
+              <div className="hidden sm:block">
+                <h1 className="text-sm sm:text-base font-bold tracking-tight text-slate-900 dark:text-white leading-tight">
+                  Qandchi Bola
+                </h1>
+                <p className="text-[10px] sm:text-xs text-slate-500 dark:text-slate-400 font-semibold tracking-widest uppercase leading-tight mt-0.5">
+                  Distributsiya
+                </p>
+              </div>
             </div>
-            <div className="hidden sm:block">
-              <h1 className="text-sm sm:text-base font-bold tracking-tight text-slate-900 dark:text-white leading-tight">
-                Qandchi Bola
-              </h1>
-              <p className="text-[10px] sm:text-xs text-slate-500 dark:text-slate-400 font-semibold tracking-widest uppercase leading-tight mt-0.5">
-                Distributsiya
-              </p>
+
+            {/* Right: User info + actions (Mobile compact) */}
+            <div className="flex items-center gap-1.5 sm:gap-3 shrink-0 sm:hidden">
+              <button
+                onClick={toggleTheme}
+                className="w-8 h-8 flex items-center justify-center bg-slate-100 dark:bg-slate-900/60 hover:bg-slate-200 dark:hover:bg-slate-800/80 text-slate-600 dark:text-gray-300 hover:text-slate-900 dark:hover:text-white rounded-lg transition border border-slate-200 dark:border-slate-700/50 shadow-sm cursor-pointer"
+              >
+                {themeMode === 'dark' ? <Sun size={16} /> : <Moon size={16} />}
+              </button>
+              <button
+                onClick={() => setIsPasswordModalOpen(true)}
+                className="w-8 h-8 flex items-center justify-center bg-slate-100 dark:bg-slate-900/60 hover:bg-slate-200 dark:hover:bg-slate-800/80 text-slate-600 dark:text-gray-300 hover:text-slate-900 dark:hover:text-white rounded-lg transition border border-slate-200 dark:border-slate-700/50 shadow-sm cursor-pointer"
+              >
+                <KeyRound size={16} />
+              </button>
+              {!isInstalled && (
+                <button
+                  onClick={handleInstallClick}
+                  className="w-8 h-8 flex items-center justify-center bg-gradient-to-r from-brand-600 to-brand-500 text-white rounded-lg shadow-sm animate-pulse cursor-pointer"
+                >
+                  <Download size={16} />
+                </button>
+              )}
+              <button
+                onClick={handleLogoutClick}
+                className="w-8 h-8 flex items-center justify-center bg-red-100 dark:bg-red-950/40 text-red-500 dark:text-red-400 rounded-lg transition border border-red-200 dark:border-red-500/20 shadow-sm cursor-pointer"
+              >
+                <LogOut size={16} />
+              </button>
             </div>
           </div>
 
-          {/* Navigation — single row flex wrap */}
-          <nav className="flex items-center gap-1.5 sm:gap-2 bg-slate-100 dark:bg-slate-950/60 p-1 sm:p-1.5 rounded-2xl border border-slate-200 dark:border-slate-800/80 overflow-x-auto scrollbar-hide transition-colors duration-200">
+          {/* Navigation — single row flex wrap, scrollable on mobile */}
+          <nav className="flex items-center gap-1.5 sm:gap-2 bg-slate-100 dark:bg-slate-950/60 p-1 sm:p-1.5 rounded-2xl border border-slate-200 dark:border-slate-800/80 overflow-x-auto w-full sm:w-auto no-scrollbar transition-colors duration-200">
             {navTabs.map((tab) => {
               const Icon = tab.icon;
               return (
@@ -183,14 +216,13 @@ function AppContent({ userRole, username, handleLogout, isInstalled, handleInsta
             })}
           </nav>
 
-          {/* Right: User info + actions */}
-          <div className="flex items-center gap-2 sm:gap-3 shrink-0">
-            <div className="hidden sm:flex flex-col text-right">
-              <span className="text-slate-800 dark:text-white text-xs sm:text-sm font-bold leading-tight">{username}</span>
-              <span className="text-[9px] sm:text-[10px] text-brand-500 dark:text-brand-300 font-bold uppercase tracking-wider leading-tight mt-0.5">{userRole}</span>
+          {/* Right Desktop Actions */}
+          <div className="hidden sm:flex items-center gap-3 shrink-0">
+            <div className="flex flex-col text-right">
+              <span className="text-slate-800 dark:text-white text-sm font-bold leading-tight">{username}</span>
+              <span className="text-[10px] text-brand-500 dark:text-brand-300 font-bold uppercase tracking-wider leading-tight mt-0.5">{userRole}</span>
             </div>
 
-            {/* Theme toggle button */}
             <button
               onClick={toggleTheme}
               className="w-10 h-10 flex items-center justify-center bg-slate-100 dark:bg-slate-900/60 hover:bg-slate-200 dark:hover:bg-slate-800/80 text-slate-600 dark:text-gray-300 hover:text-slate-900 dark:hover:text-white rounded-xl transition border border-slate-200 dark:border-slate-700/50 hover:border-slate-300 dark:hover:border-slate-600 shadow-sm cursor-pointer"
@@ -199,7 +231,6 @@ function AppContent({ userRole, username, handleLogout, isInstalled, handleInsta
               {themeMode === 'dark' ? <Sun size={20} /> : <Moon size={20} />}
             </button>
 
-            {/* Password change button */}
             <button
               onClick={() => setIsPasswordModalOpen(true)}
               className="w-10 h-10 flex items-center justify-center bg-slate-100 dark:bg-slate-900/60 hover:bg-slate-200 dark:hover:bg-slate-800/80 text-slate-600 dark:text-gray-300 hover:text-slate-900 dark:hover:text-white rounded-xl transition border border-slate-200 dark:border-slate-700/50 hover:border-slate-300 dark:hover:border-slate-600 shadow-sm cursor-pointer"
@@ -208,16 +239,14 @@ function AppContent({ userRole, username, handleLogout, isInstalled, handleInsta
               <KeyRound size={20} />
             </button>
 
-            {/* Fullscreen toggle */}
             <button
               onClick={toggleFullScreen}
-              className="hidden sm:flex w-10 h-10 items-center justify-center bg-slate-100 dark:bg-slate-900/60 hover:bg-slate-200 dark:hover:bg-slate-800/80 text-slate-600 dark:text-gray-300 hover:text-slate-900 dark:hover:text-white rounded-xl transition border border-slate-200 dark:border-slate-700/50 hover:border-slate-300 dark:hover:border-slate-600 shadow-sm cursor-pointer"
+              className="w-10 h-10 flex items-center justify-center bg-slate-100 dark:bg-slate-900/60 hover:bg-slate-200 dark:hover:bg-slate-800/80 text-slate-600 dark:text-gray-300 hover:text-slate-900 dark:hover:text-white rounded-xl transition border border-slate-200 dark:border-slate-700/50 hover:border-slate-300 dark:hover:border-slate-600 shadow-sm cursor-pointer"
               title={isFullscreen ? "Kichik ekran" : "To'liq ekran"}
             >
               {isFullscreen ? <Minimize2 size={20} /> : <Maximize2 size={20} />}
             </button>
 
-            {/* Install PWA */}
             {!isInstalled && (
               <button
                 onClick={handleInstallClick}
@@ -228,7 +257,6 @@ function AppContent({ userRole, username, handleLogout, isInstalled, handleInsta
               </button>
             )}
 
-            {/* Logout */}
             <button
               onClick={handleLogoutClick}
               className="w-10 h-10 flex items-center justify-center bg-red-100 dark:bg-red-950/40 hover:bg-red-200 dark:hover:bg-red-900/60 text-red-500 dark:text-red-400 hover:text-red-600 dark:hover:text-red-300 rounded-xl transition border border-red-200 dark:border-red-500/20 hover:border-red-300 dark:hover:border-red-500/40 shadow-sm cursor-pointer shrink-0"

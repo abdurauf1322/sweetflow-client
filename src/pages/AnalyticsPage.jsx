@@ -508,7 +508,7 @@ export const AnalyticsPage = () => {
                             </div>
                           </td>
                           <td className="p-3 text-center text-slate-500 dark:text-gray-400 font-mono">{store.ordersCount} ta</td>
-                          <td className="p-3 text-right text-red-400 font-mono">
+                          <td className={`p-3 text-right font-mono ${store.currentDebt > 0 ? 'text-red-400' : 'text-emerald-400'}`}>
                             {store.currentDebt > 0 ? formatCurrency(store.currentDebt) : 'Qarz yo\'q'}
                           </td>
                           <td className="p-3 text-right text-emerald-400 font-bold font-mono">

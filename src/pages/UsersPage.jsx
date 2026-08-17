@@ -30,11 +30,16 @@ export const UsersPage = () => {
   const fetchUsers = async () => {
     try {
       setLoading(true);
-      const response = await api.get('/users', { params: { period } });
-      if (response.data?.success && Array.isArray(response.data?.data)) {
-        setUsers(response.data.data);
+      const token = localStorage.getItem('token') || localStorage.getItem('auth_token');
+      const response = await api.get('/users', {
+        params: { period },
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      const responseData = response.data?.data || response.data || [];
+      if (response.data?.success && Array.isArray(responseData)) {
+        setUsers(responseData);
       } else {
-        setUsers([]);
+        setUsers(Array.isArray(responseData) ? responseData : []);
       }
     } catch (error) {
       toast.error("Xodimlarni yuklashda xatolik yuz berdi");

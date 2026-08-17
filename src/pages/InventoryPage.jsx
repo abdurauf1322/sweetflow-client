@@ -57,8 +57,8 @@ export const InventoryPage = () => {
   const [expenseAmount, setExpenseAmount] = useState('');
   const [expenseDescription, setExpenseDescription] = useState('');
   const [addingExpense, setAddingExpense] = useState(false);
-  const isBoss = localStorage.getItem('role') === 'boss';
-  const isManager = localStorage.getItem('role') === 'manager';
+  const isBoss = (localStorage.getItem('role') || '').toUpperCase() === 'BOSS';
+  const isManager = (localStorage.getItem('role') || '').toUpperCase() === 'MANAGER';
 
   const handleImageUpload = (e, isEdit = false) => {
     const file = e.target.files[0];
@@ -320,37 +320,37 @@ export const InventoryPage = () => {
     <div className="space-y-4 sm:space-y-6 h-full flex flex-col p-2 sm:p-4">
       {/* Top statistics summary cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
-        <div className="glass-panel rounded-2xl p-4 sm:p-5 border border-white/5 flex items-center space-x-3 sm:space-x-4">
+        <div className="glass-panel rounded-2xl p-4 sm:p-5 border border-slate-200 dark:border-white/5 flex items-center space-x-3 sm:space-x-4">
           <div className="bg-brand-500/10 p-2.5 sm:p-3 rounded-xl text-brand-400 shrink-0">
             <ClipboardList size={22} />
           </div>
           <div>
-            <div className="text-[10px] sm:text-xs text-gray-400 uppercase tracking-wider font-semibold">Jami shirinliklar</div>
-            <div className="text-lg sm:text-xl font-bold text-white mt-0.5">{products.length} xil</div>
+            <div className="text-[10px] sm:text-xs text-slate-500 dark:text-gray-400 uppercase tracking-wider font-semibold">Jami shirinliklar</div>
+            <div className="text-lg sm:text-xl font-bold text-slate-900 dark:text-white mt-0.5">{products.length} xil</div>
           </div>
         </div>
 
-        <div className="glass-panel rounded-2xl p-4 sm:p-5 border border-white/5 flex items-center space-x-3 sm:space-x-4">
+        <div className="glass-panel rounded-2xl p-4 sm:p-5 border border-slate-200 dark:border-white/5 flex items-center space-x-3 sm:space-x-4">
           <div className="bg-green-500/10 p-2.5 sm:p-3 rounded-xl text-green-400 shrink-0">
             <Box size={22} />
           </div>
           <div>
-            <div className="text-[10px] sm:text-xs text-gray-400 uppercase tracking-wider font-semibold">Umumiy zaxira qoldig'i</div>
-            <div className="text-lg sm:text-xl font-bold text-white mt-0.5">
+            <div className="text-[10px] sm:text-xs text-slate-500 dark:text-gray-400 uppercase tracking-wider font-semibold">Umumiy zaxira qoldig'i</div>
+            <div className="text-lg sm:text-xl font-bold text-slate-900 dark:text-white mt-0.5">
               {products.reduce((acc, p) => acc + Math.floor((p.stockCount || 0) / (p.quantityInBox || 1)), 0).toLocaleString()} quti
             </div>
           </div>
         </div>
 
         <div className={`glass-panel rounded-2xl p-4 sm:p-5 border flex items-center space-x-3 sm:space-x-4 sm:col-span-2 lg:col-span-1 ${
-          lowStockProducts.length > 0 ? 'border-yellow-500/20 bg-yellow-950/5' : 'border-white/5'
+          lowStockProducts.length > 0 ? 'border-yellow-500/20 bg-yellow-950/5' : 'border-slate-200 dark:border-white/5'
         }`}>
-          <div className={`p-2.5 sm:p-3 rounded-xl shrink-0 ${lowStockProducts.length > 0 ? 'bg-yellow-500/10 text-yellow-400' : 'bg-gray-500/10 text-gray-400'}`}>
+          <div className={`p-2.5 sm:p-3 rounded-xl shrink-0 ${lowStockProducts.length > 0 ? 'bg-yellow-500/10 text-yellow-400' : 'bg-gray-500/10 text-slate-500 dark:text-gray-400'}`}>
             <AlertTriangle size={22} />
           </div>
           <div>
-            <div className="text-[10px] sm:text-xs text-gray-400 uppercase tracking-wider font-semibold">Kam qolgan mahsulotlar</div>
-            <div className={`text-lg sm:text-xl font-bold mt-0.5 ${lowStockProducts.length > 0 ? 'text-yellow-400' : 'text-white'}`}>
+            <div className="text-[10px] sm:text-xs text-slate-500 dark:text-gray-400 uppercase tracking-wider font-semibold">Kam qolgan mahsulotlar</div>
+            <div className={`text-lg sm:text-xl font-bold mt-0.5 ${lowStockProducts.length > 0 ? 'text-yellow-400' : 'text-slate-900 dark:text-white'}`}>
               {lowStockProducts.length} xil
             </div>
           </div>
@@ -360,11 +360,11 @@ export const InventoryPage = () => {
       {/* Control panel header */}
       <div className="flex flex-col md:flex-row justify-between items-stretch md:items-center gap-4">
         {/* Tab switcher */}
-        <div className="flex bg-slate-950/60 p-1 rounded-xl border border-white/5 w-full md:w-auto">
+        <div className="flex bg-slate-50/60 dark:bg-slate-950/60 p-1 rounded-xl border border-slate-200 dark:border-white/5 w-full md:w-auto">
           <button
             onClick={() => setActiveTab('all')}
             className={`flex-1 md:flex-none text-center px-3 sm:px-4 py-2 sm:py-2 rounded-lg text-xs font-semibold transition border min-h-[38px] ${
-              activeTab === 'all' ? 'bg-brand-500 text-white font-bold border-brand-400' : 'text-gray-400 hover:text-gray-300 border-transparent hover:border-white/10'
+              activeTab === 'all' ? 'bg-brand-500 text-white font-bold border-brand-400' : 'text-slate-500 dark:text-gray-400 hover:text-slate-700 dark:text-gray-300 border-transparent hover:border-slate-200 dark:border-white/10'
             }`}
           >
             Barchasi ({products.length})
@@ -372,7 +372,7 @@ export const InventoryPage = () => {
           <button
             onClick={() => setActiveTab('low')}
             className={`flex-1 md:flex-none text-center px-3 sm:px-4 py-2 sm:py-2 rounded-lg text-xs font-semibold transition flex items-center justify-center space-x-1.5 border min-h-[38px] ${
-              activeTab === 'low' ? 'bg-yellow-600 text-white font-bold border-yellow-500' : 'text-gray-400 hover:text-gray-300 border-transparent hover:border-white/10'
+              activeTab === 'low' ? 'bg-yellow-600 text-white font-bold border-yellow-500' : 'text-slate-500 dark:text-gray-400 hover:text-slate-700 dark:text-gray-300 border-transparent hover:border-slate-200 dark:border-white/10'
             }`}
           >
             <AlertTriangle size={12} className="shrink-0" />
@@ -382,7 +382,7 @@ export const InventoryPage = () => {
 
         <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 w-full md:w-auto">
           <div className="relative max-w-md w-full md:w-96 shrink-0">
-            <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
+            <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-500 dark:text-slate-400">
               <Search size={18} />
             </div>
             
@@ -391,14 +391,14 @@ export const InventoryPage = () => {
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               placeholder="Mahsulot nomi bo'yicha qidirish..."
-              className="w-full pl-11 pr-10 py-2.5 bg-slate-900/90 border border-slate-700/80 rounded-xl text-slate-100 placeholder-slate-400 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition shadow-inner min-h-[40px]"
+              className="w-full pl-11 pr-10 py-2.5 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-xl text-slate-900 dark:text-slate-100 placeholder-slate-400 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition shadow-inner min-h-[40px]"
             />
             
             {searchQuery && (
               <button
                 type="button"
                 onClick={() => setSearchQuery('')}
-                className="absolute inset-y-0 right-0 pr-3.5 flex items-center text-slate-400 hover:text-slate-200 transition cursor-pointer"
+                className="absolute inset-y-0 right-0 pr-3.5 flex items-center text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 transition cursor-pointer"
               >
                 <X size={16} />
               </button>
@@ -426,12 +426,12 @@ export const InventoryPage = () => {
       </div>
 
       {/* Inventory Container */}
-      <div className="flex-1 overflow-hidden glass-panel rounded-2xl border border-white/5 flex flex-col min-h-0">
+      <div className="flex-1 overflow-hidden glass-panel rounded-2xl border border-slate-200 dark:border-white/5 flex flex-col min-h-0">
         {/* Desktop Table (hidden on mobile < 640px) */}
         <div className="hidden sm:block overflow-x-auto flex-1">
           <table className="w-full text-left border-collapse text-xs">
             <thead>
-              <tr className="border-b border-white/5 bg-slate-950/40 text-gray-400 uppercase tracking-wider font-semibold">
+              <tr className="border-b border-slate-200 dark:border-white/5 bg-slate-100/50 dark:bg-slate-900/40  text-slate-500 dark:text-gray-400 uppercase tracking-wider font-semibold">
                 <th className="p-4">Mahsulot nomi</th>
                 <th className="p-4">Kategoriya</th>
                 <th className="p-4">Qutidagi dona</th>
@@ -442,10 +442,10 @@ export const InventoryPage = () => {
                 <th className="p-4 text-center">Amallar</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-white/5 text-gray-300">
+            <tbody className="divide-y divide-slate-200 dark:divide-white/5 text-slate-700 dark:text-gray-300">
               {displayedProducts.length === 0 ? (
                 <tr>
-                  <td colSpan="8" className="p-8 text-center text-gray-500 text-sm">
+                  <td colSpan="8" className="p-8 text-center text-slate-500 dark:text-gray-500 text-sm">
                     Hech qanday mahsulot topilmadi
                   </td>
                 </tr>
@@ -457,29 +457,29 @@ export const InventoryPage = () => {
 
                   return (
                     <tr key={product.id} className="hover:bg-white/[0.02] transition">
-                      <td className="p-4 font-semibold text-white">
+                      <td className="p-4 font-semibold text-slate-900 dark:text-white">
                         <div className="flex items-center space-x-3">
-                          <div className="h-10 w-10 shrink-0 rounded-lg overflow-hidden bg-slate-900 border border-white/5 flex items-center justify-center">
+                          <div className="h-10 w-10 shrink-0 rounded-lg overflow-hidden bg-white dark:bg-slate-900 border border-slate-200 dark:border-white/5 flex items-center justify-center">
                             {product.imageUrl ? (
                               <img src={getImageUrl(product.imageUrl)} alt={product.name} className="h-full w-full object-cover" onError={(e) => { e.target.onerror = null; e.target.src = fallbackImage; }} />
                             ) : (
-                              <Box size={16} className="text-gray-600" />
+                              <Box size={16} className="text-slate-500 dark:text-slate-400 dark:text-gray-600" />
                             )}
                           </div>
                           <span>{product.name}</span>
                         </div>
                       </td>
-                      <td className="p-4 text-gray-400">{product.category?.name || 'Noma\'lum'}</td>
-                      <td className="p-4 text-gray-400">{product.quantityInBox} dona</td>
-                      <td className="p-4 text-white text-xs">
-                        <div className="text-[10px] text-gray-500">Tannarx: {Number(product.costPrice || 0).toLocaleString()} s.</div>
+                      <td className="p-4 text-slate-500 dark:text-gray-400">{product.category?.name || 'Noma\'lum'}</td>
+                      <td className="p-4 text-slate-500 dark:text-gray-400">{product.quantityInBox} dona</td>
+                      <td className="p-4 text-slate-900 dark:text-white text-xs">
+                        <div className="text-[10px] text-slate-500 dark:text-gray-500">Tannarx: {Number(product.costPrice || 0).toLocaleString()} s.</div>
                         <div>
                           {Number(product.unitPrice).toLocaleString()} s. / <span className="text-brand-300 font-semibold">{Number(product.boxPrice).toLocaleString()} s.</span>
                         </div>
                       </td>
 
-                      <td className="p-4 font-mono text-white">{product.stockCount} dona</td>
-                      <td className="p-4 font-mono text-white">
+                      <td className="p-4 font-mono text-slate-900 dark:text-white">{product.stockCount} dona</td>
+                      <td className="p-4 font-mono text-slate-900 dark:text-white">
                         {boxCount} quti {pieceRem > 0 && `+ ${pieceRem} dona`}
                       </td>
                       <td className="p-4">
@@ -520,7 +520,7 @@ export const InventoryPage = () => {
         {/* Mobile Card List (visible on < 640px) */}
         <div className="block sm:hidden overflow-y-auto flex-1 p-3 space-y-3">
           {displayedProducts.length === 0 ? (
-            <div className="p-8 text-center text-gray-500 text-sm">
+            <div className="p-8 text-center text-slate-500 dark:text-gray-500 text-sm">
               Hech qanday mahsulot topilmadi
             </div>
           ) : (
@@ -534,14 +534,14 @@ export const InventoryPage = () => {
                   {/* Row 1: Name + Edit/Delete buttons */}
                   <div className="flex items-center justify-between gap-2 w-full">
                     <div className="flex items-center space-x-3 min-w-0 flex-1">
-                      <div className="h-10 w-10 shrink-0 rounded-lg overflow-hidden bg-slate-900 border border-white/5 flex items-center justify-center">
+                      <div className="h-10 w-10 shrink-0 rounded-lg overflow-hidden bg-white dark:bg-slate-900 border border-slate-200 dark:border-white/5 flex items-center justify-center">
                         {product.imageUrl ? (
                           <img src={getImageUrl(product.imageUrl)} alt={product.name} className="h-full w-full object-cover" onError={(e) => { e.target.onerror = null; e.target.src = fallbackImage; }} />
                         ) : (
-                          <Box size={16} className="text-gray-600" />
+                          <Box size={16} className="text-slate-500 dark:text-slate-400 dark:text-gray-600" />
                         )}
                       </div>
-                      <h3 className="font-bold text-white text-sm leading-tight truncate">{product.name}</h3>
+                      <h3 className="font-bold text-slate-900 dark:text-white text-sm leading-tight truncate">{product.name}</h3>
                     </div>
                     <div className="flex items-center gap-2 shrink-0">
                       <button
@@ -563,7 +563,7 @@ export const InventoryPage = () => {
 
                   {/* Row 2: Category + Status Badge */}
                   <div className="flex items-center justify-between gap-2 w-full">
-                    <span className="text-[10px] text-gray-400 font-medium bg-white/5 px-2 py-0.5 rounded-full truncate min-w-0">
+                    <span className="text-[10px] text-slate-500 dark:text-gray-400 font-medium bg-white/5 px-2 py-0.5 rounded-full truncate min-w-0">
                       {product.category?.name || 'Noma\'lum'}
                     </span>
                     <span className={`inline-block px-2 py-0.5 rounded-full font-bold text-[9px] uppercase border shrink-0 ${
@@ -578,27 +578,27 @@ export const InventoryPage = () => {
                   </div>
 
                   {/* Row 3: Prices & Stock in 2x2 Grid */}
-                  <div className="grid grid-cols-2 gap-2 w-full p-2.5 bg-slate-900/50 rounded-lg text-xs">
-                    <div className="min-w-0 col-span-2 border-b border-white/5 pb-1 mb-1">
-                      <span className="text-gray-500 block text-[9px] uppercase tracking-wider">Tannarxi (dona)</span>
-                      <span className="text-gray-400 font-semibold break-words">{Number(product.costPrice || 0).toLocaleString()} s.</span>
+                  <div className="grid grid-cols-2 gap-2 w-full p-2.5 bg-slate-100/50 dark:bg-slate-900/40  rounded-lg text-xs">
+                    <div className="min-w-0 col-span-2 border-b border-slate-200 dark:border-white/5 pb-1 mb-1">
+                      <span className="text-slate-500 dark:text-gray-500 block text-[9px] uppercase tracking-wider">Tannarxi (dona)</span>
+                      <span className="text-slate-500 dark:text-gray-400 font-semibold break-words">{Number(product.costPrice || 0).toLocaleString()} s.</span>
                     </div>
                     <div className="min-w-0">
-                      <span className="text-gray-500 block text-[9px] uppercase tracking-wider">Dona narxi</span>
-                      <span className="text-white font-semibold break-words">{Number(product.unitPrice).toLocaleString()} s.</span>
+                      <span className="text-slate-500 dark:text-gray-500 block text-[9px] uppercase tracking-wider">Dona narxi</span>
+                      <span className="text-slate-900 dark:text-white font-semibold break-words">{Number(product.unitPrice).toLocaleString()} s.</span>
                     </div>
 
                     <div className="min-w-0">
-                      <span className="text-gray-500 block text-[9px] uppercase tracking-wider">Zaxira (dona)</span>
-                      <span className="text-white font-semibold font-mono break-words">{product.stockCount} dona</span>
+                      <span className="text-slate-500 dark:text-gray-500 block text-[9px] uppercase tracking-wider">Zaxira (dona)</span>
+                      <span className="text-slate-900 dark:text-white font-semibold font-mono break-words">{product.stockCount} dona</span>
                     </div>
                     <div className="min-w-0">
-                      <span className="text-gray-500 block text-[9px] uppercase tracking-wider">Quti narxi</span>
+                      <span className="text-slate-500 dark:text-gray-500 block text-[9px] uppercase tracking-wider">Quti narxi</span>
                       <span className="text-brand-300 font-bold break-words">{Number(product.boxPrice).toLocaleString()} s.</span>
                     </div>
                     <div className="min-w-0">
-                      <span className="text-gray-500 block text-[9px] uppercase tracking-wider">Zaxira (quti)</span>
-                      <span className="text-white font-semibold font-mono break-words">
+                      <span className="text-slate-500 dark:text-gray-500 block text-[9px] uppercase tracking-wider">Zaxira (quti)</span>
+                      <span className="text-slate-900 dark:text-white font-semibold font-mono break-words">
                         {boxCount} quti{pieceRem > 0 ? ` +${pieceRem}` : ''}
                       </span>
                     </div>
@@ -613,37 +613,37 @@ export const InventoryPage = () => {
       {/* Add Sweet Product Modal Overlay */}
       {showAddForm && (
         <div className="fixed inset-0 bg-black/85 backdrop-blur-sm z-50 flex items-center justify-center p-4 overflow-y-auto">
-          <div className="glass-panel border-white/10 max-w-md w-full rounded-2xl p-5 sm:p-6 relative my-auto max-h-[95vh] overflow-y-auto animate-fade-in">
+          <div className="glass-panel border-slate-200 dark:border-white/10 max-w-md w-full rounded-2xl p-5 sm:p-6 relative my-auto max-h-[95vh] overflow-y-auto animate-fade-in">
             <button
               onClick={() => setShowAddForm(false)}
-              className="absolute top-4 right-4 text-gray-400 hover:text-white"
+              className="absolute top-4 right-4 text-slate-500 dark:text-gray-400 hover:text-slate-900 dark:text-white"
             >
               <X size={20} />
             </button>
-            <h2 className="text-lg font-bold text-white mb-4 flex items-center space-x-2">
+            <h2 className="text-lg font-bold text-slate-900 dark:text-white mb-4 flex items-center space-x-2">
               <Layers className="text-brand-400" />
               <span>Yangi Mahsulot Qo'shish</span>
             </h2>
 
-            <form onSubmit={handleRegisterProduct} className="space-y-4 text-sm text-gray-300">
+            <form onSubmit={handleRegisterProduct} className="space-y-4 text-sm text-slate-700 dark:text-gray-300">
               <div className="space-y-1">
-                <label className="text-xs text-gray-400 block">Mahsulot Nomi:</label>
+                <label className="text-xs text-slate-500 dark:text-gray-400 block">Mahsulot Nomi:</label>
                 <input
                   type="text"
                   required
                   placeholder="Masalan: Mars Miniatures, Snickers Box..."
-                  className="bg-slate-900 border border-white/10 rounded-xl text-white w-full p-2.5 focus:ring-brand-500 focus:border-brand-500"
+                  className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-white/10 rounded-xl text-slate-900 dark:text-white w-full p-2.5 focus:ring-brand-500 focus:border-brand-500"
                   value={name}
                   onChange={(e) => setName(e.target.value)}
                 />
               </div>
 
               <div className="space-y-1">
-                <label className="text-xs text-gray-400 block">Kategoriya:</label>
+                <label className="text-xs text-slate-500 dark:text-gray-400 block">Kategoriya:</label>
                 <div className="flex space-x-2">
                   <select
                     required
-                    className="bg-slate-900 border border-white/10 rounded-xl text-white flex-1 p-2.5 focus:ring-brand-500"
+                    className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-white/10 rounded-xl text-slate-900 dark:text-white flex-1 p-2.5 focus:ring-brand-500"
                     value={categoryId}
                     onChange={(e) => setCategoryId(e.target.value)}
                   >
@@ -663,13 +663,13 @@ export const InventoryPage = () => {
                 </div>
 
                 {showAddCategoryInline && (
-                  <div className="mt-2 p-3 bg-slate-950/40 rounded-xl border border-white/5 space-y-2">
-                    <label className="text-[10px] text-gray-400 block uppercase tracking-wider font-semibold">Yangi kategoriya nomi:</label>
+                  <div className="mt-2 p-3 bg-slate-100/50 dark:bg-slate-900/40  rounded-xl border border-slate-200 dark:border-white/5 space-y-2">
+                    <label className="text-[10px] text-slate-500 dark:text-gray-400 block uppercase tracking-wider font-semibold">Yangi kategoriya nomi:</label>
                     <div className="flex flex-col sm:flex-row gap-2">
                       <input
                         type="text"
                         placeholder="Kategoriya nomi..."
-                        className="bg-slate-900 border border-white/10 rounded-xl text-white flex-1 p-2 text-xs focus:ring-brand-500 focus:border-brand-500 min-h-[38px]"
+                        className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-white/10 rounded-xl text-slate-900 dark:text-white flex-1 p-2 text-xs focus:ring-brand-500 focus:border-brand-500 min-h-[38px]"
                         value={newCategoryName}
                         onChange={(e) => setNewCategoryName(e.target.value)}
                         onKeyDown={(e) => {
@@ -694,7 +694,7 @@ export const InventoryPage = () => {
                             setShowAddCategoryInline(false);
                             setNewCategoryName('');
                           }}
-                          className="bg-slate-800 hover:bg-slate-700 text-gray-300 font-semibold px-3 py-2 rounded-xl transition text-xs cursor-pointer border border-white/10 flex-1 sm:flex-none min-h-[38px] justify-center flex items-center"
+                          className="bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-gray-300 font-semibold px-3 py-2 rounded-xl transition text-xs cursor-pointer border border-slate-200 dark:border-white/10 flex-1 sm:flex-none min-h-[38px] justify-center flex items-center"
                         >
                           Bekor
                         </button>
@@ -706,57 +706,57 @@ export const InventoryPage = () => {
 
               {/* Narxlar qismi: 2+2+1 ta maydon */}
               <div className="space-y-2">
-                <div className="text-[10px] text-gray-500 uppercase tracking-wider font-semibold">Tannarxlar (Xarid narxi)</div>
+                <div className="text-[10px] text-slate-500 dark:text-gray-500 uppercase tracking-wider font-semibold">Tannarxlar (Xarid narxi)</div>
                 <div className="grid grid-cols-2 gap-2 sm:gap-3">
                   <div className="space-y-1">
-                    <label className="text-[10px] sm:text-xs text-gray-400 block">Dona tannarxi (s.):</label>
+                    <label className="text-[10px] sm:text-xs text-slate-500 dark:text-gray-400 block">Dona tannarxi (s.):</label>
                     <input
                       type="text"
                       required
-                      className="bg-slate-900 border border-white/10 rounded-xl text-white w-full p-2 focus:ring-brand-500 text-xs sm:text-sm"
+                      className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-white/10 rounded-xl text-slate-900 dark:text-white w-full p-2 focus:ring-brand-500 text-xs sm:text-sm"
                       value={costPrice}
                       onChange={(e) => setCostPrice(formatNumberWithSpaces(e.target.value))}
                     />
                   </div>
                   <div className="space-y-1">
-                    <label className="text-[10px] sm:text-xs text-gray-400 block">Quti tannarxi (s.):</label>
+                    <label className="text-[10px] sm:text-xs text-slate-500 dark:text-gray-400 block">Quti tannarxi (s.):</label>
                     <input
                       type="text"
                       required
-                      className="bg-slate-900 border border-white/10 rounded-xl text-white w-full p-2 focus:ring-brand-500 text-xs sm:text-sm"
+                      className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-white/10 rounded-xl text-slate-900 dark:text-white w-full p-2 focus:ring-brand-500 text-xs sm:text-sm"
                       value={boxCostPrice}
                       onChange={(e) => setBoxCostPrice(formatNumberWithSpaces(e.target.value))}
                     />
                   </div>
                 </div>
-                <div className="text-[10px] text-gray-500 uppercase tracking-wider font-semibold mt-1">Sotish Narxlari</div>
+                <div className="text-[10px] text-slate-500 dark:text-gray-500 uppercase tracking-wider font-semibold mt-1">Sotish Narxlari</div>
                 <div className="grid grid-cols-3 gap-2 sm:gap-3">
                   <div className="space-y-1">
-                    <label className="text-[10px] sm:text-xs text-gray-400 block">Dona narx (s.):</label>
+                    <label className="text-[10px] sm:text-xs text-slate-500 dark:text-gray-400 block">Dona narx (s.):</label>
                     <input
                       type="text"
                       required
-                      className="bg-slate-900 border border-white/10 rounded-xl text-white w-full p-2 focus:ring-brand-500 text-xs sm:text-sm"
+                      className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-white/10 rounded-xl text-slate-900 dark:text-white w-full p-2 focus:ring-brand-500 text-xs sm:text-sm"
                       value={unitPrice}
                       onChange={(e) => setUnitPrice(formatNumberWithSpaces(e.target.value))}
                     />
                   </div>
                   <div className="space-y-1">
-                    <label className="text-[10px] sm:text-xs text-gray-400 block">Quti narx (s.):</label>
+                    <label className="text-[10px] sm:text-xs text-slate-500 dark:text-gray-400 block">Quti narx (s.):</label>
                     <input
                       type="text"
                       required
-                      className="bg-slate-900 border border-white/10 rounded-xl text-white w-full p-2 focus:ring-brand-500 text-xs sm:text-sm"
+                      className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-white/10 rounded-xl text-slate-900 dark:text-white w-full p-2 focus:ring-brand-500 text-xs sm:text-sm"
                       value={boxPrice}
                       onChange={(e) => setBoxPrice(formatNumberWithSpaces(e.target.value))}
                     />
                   </div>
                   <div className="space-y-1">
-                    <label className="text-[10px] sm:text-xs text-gray-400 block">Qutida dona:</label>
+                    <label className="text-[10px] sm:text-xs text-slate-500 dark:text-gray-400 block">Qutida dona:</label>
                     <input
                       type="number"
                       required
-                      className="bg-slate-900 border border-white/10 rounded-xl text-white w-full p-2 focus:ring-brand-500 text-xs sm:text-sm"
+                      className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-white/10 rounded-xl text-slate-900 dark:text-white w-full p-2 focus:ring-brand-500 text-xs sm:text-sm"
                       value={quantityInBox}
                       onChange={(e) => setQuantityInBox(e.target.value)}
                     />
@@ -767,20 +767,20 @@ export const InventoryPage = () => {
 
               <div className="grid grid-cols-2 gap-3 sm:gap-4">
                 <div className="space-y-1">
-                  <label className="text-[10px] sm:text-xs text-gray-400 block">Boshlang'ich zaxira (quti):</label>
+                  <label className="text-[10px] sm:text-xs text-slate-500 dark:text-gray-400 block">Boshlang'ich zaxira (quti):</label>
                   <input
                     type="number"
-                    className="bg-slate-900 border border-white/10 rounded-xl text-white w-full p-2.5 focus:ring-brand-500 text-xs sm:text-sm"
+                    className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-white/10 rounded-xl text-slate-900 dark:text-white w-full p-2.5 focus:ring-brand-500 text-xs sm:text-sm"
                     value={initialBoxes}
                     onChange={(e) => setInitialBoxes(e.target.value)}
                   />
                 </div>
 
                 <div className="space-y-1">
-                  <label className="text-[10px] sm:text-xs text-gray-400 block">Boshlang'ich zaxira (dona):</label>
+                  <label className="text-[10px] sm:text-xs text-slate-500 dark:text-gray-400 block">Boshlang'ich zaxira (dona):</label>
                   <input
                     type="number"
-                    className="bg-slate-900 border border-white/10 rounded-xl text-white w-full p-2.5 focus:ring-brand-500 text-xs sm:text-sm"
+                    className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-white/10 rounded-xl text-slate-900 dark:text-white w-full p-2.5 focus:ring-brand-500 text-xs sm:text-sm"
                     value={initialPieceStock}
                     onChange={(e) => setInitialPieceStock(e.target.value)}
                   />
@@ -788,13 +788,13 @@ export const InventoryPage = () => {
               </div>
 
               <div className="space-y-1">
-                <label className="text-xs text-gray-400 block">Mahsulot rasmi (ixtiyoriy):</label>
+                <label className="text-xs text-slate-500 dark:text-gray-400 block">Mahsulot rasmi (ixtiyoriy):</label>
                 <div className="flex flex-col space-y-2">
                   <input
                     type="file"
                     accept="image/*,image/jpeg,image/png"
                     id="product-image-upload"
-                    className="bg-slate-900 border border-white/10 rounded-xl text-white w-full p-2 text-xs"
+                    className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-white/10 rounded-xl text-slate-900 dark:text-white w-full p-2 text-xs"
                     onChange={(e) => handleImageUpload(e, false)}
                     disabled={isUploading}
                   />
@@ -803,7 +803,7 @@ export const InventoryPage = () => {
                     <img 
                       src={imagePreview.startsWith('data:') ? imagePreview : (getImageUrl(imagePreview) || undefined)} 
                       alt="Preview" 
-                      className="h-20 w-20 object-cover rounded-lg border border-white/10" 
+                      className="h-20 w-20 object-cover rounded-lg border border-slate-200 dark:border-white/10" 
                       onError={(e) => {
                         if (!imagePreview.startsWith('data:') && !getImageUrl(imagePreview)) {
                           e.target.onerror = null;
@@ -832,36 +832,36 @@ export const InventoryPage = () => {
       {/* Edit Sweet Product Modal Overlay */}
       {showEditForm && (
         <div className="fixed inset-0 bg-black/85 backdrop-blur-sm z-50 flex items-center justify-center p-4 overflow-y-auto">
-          <div className="glass-panel border-white/10 max-w-md w-full rounded-2xl p-5 sm:p-6 relative my-auto max-h-[95vh] overflow-y-auto">
+          <div className="glass-panel border-slate-200 dark:border-white/10 max-w-md w-full rounded-2xl p-5 sm:p-6 relative my-auto max-h-[95vh] overflow-y-auto">
             <button
               onClick={() => setShowEditForm(false)}
-              className="absolute top-4 right-4 text-gray-400 hover:text-white"
+              className="absolute top-4 right-4 text-slate-500 dark:text-gray-400 hover:text-slate-900 dark:text-white"
             >
               <X size={20} />
             </button>
-            <h2 className="text-lg font-bold text-white mb-4 flex items-center space-x-2">
+            <h2 className="text-lg font-bold text-slate-900 dark:text-white mb-4 flex items-center space-x-2">
               <Pencil className="text-blue-400" />
               <span>Mahsulotni Tahrirlash</span>
             </h2>
 
-            <form onSubmit={handleUpdateProduct} className="space-y-4 text-sm text-gray-300">
+            <form onSubmit={handleUpdateProduct} className="space-y-4 text-sm text-slate-700 dark:text-gray-300">
               <div className="space-y-1">
-                <label className="text-xs text-gray-400 block">Mahsulot Nomi:</label>
+                <label className="text-xs text-slate-500 dark:text-gray-400 block">Mahsulot Nomi:</label>
                 <input
                   type="text"
                   required
-                  className="bg-slate-900 border border-white/10 rounded-xl text-white w-full p-2.5 focus:ring-brand-500 focus:border-brand-500 text-xs sm:text-sm"
+                  className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-white/10 rounded-xl text-slate-900 dark:text-white w-full p-2.5 focus:ring-brand-500 focus:border-brand-500 text-xs sm:text-sm"
                   value={editName}
                   onChange={(e) => setEditName(e.target.value)}
                 />
               </div>
 
               <div className="space-y-1">
-                <label className="text-xs text-gray-400 block">Kategoriya:</label>
+                <label className="text-xs text-slate-500 dark:text-gray-400 block">Kategoriya:</label>
                 <div className="flex space-x-2">
                   <select
                     required
-                    className="bg-slate-900 border border-white/10 rounded-xl text-white flex-1 p-2.5 focus:ring-brand-500"
+                    className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-white/10 rounded-xl text-slate-900 dark:text-white flex-1 p-2.5 focus:ring-brand-500"
                     value={editCategoryId}
                     onChange={(e) => setEditCategoryId(e.target.value)}
                   >
@@ -881,13 +881,13 @@ export const InventoryPage = () => {
                 </div>
 
                 {showEditCategoryInline && (
-                  <div className="mt-2 p-3 bg-slate-950/40 rounded-xl border border-white/5 space-y-2">
-                    <label className="text-[10px] text-gray-400 block uppercase tracking-wider font-semibold">Yangi kategoriya nomi:</label>
+                  <div className="mt-2 p-3 bg-slate-100/50 dark:bg-slate-900/40  rounded-xl border border-slate-200 dark:border-white/5 space-y-2">
+                    <label className="text-[10px] text-slate-500 dark:text-gray-400 block uppercase tracking-wider font-semibold">Yangi kategoriya nomi:</label>
                     <div className="flex flex-col sm:flex-row gap-2">
                       <input
                         type="text"
                         placeholder="Kategoriya nomi..."
-                        className="bg-slate-900 border border-white/10 rounded-xl text-white flex-1 p-2 text-xs focus:ring-brand-500 focus:border-brand-500 min-h-[38px]"
+                        className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-white/10 rounded-xl text-slate-900 dark:text-white flex-1 p-2 text-xs focus:ring-brand-500 focus:border-brand-500 min-h-[38px]"
                         value={newEditCategoryName}
                         onChange={(e) => setNewEditCategoryName(e.target.value)}
                         onKeyDown={(e) => {
@@ -912,7 +912,7 @@ export const InventoryPage = () => {
                             setShowEditCategoryInline(false);
                             setNewEditCategoryName('');
                           }}
-                          className="bg-slate-800 hover:bg-slate-700 text-gray-300 font-semibold px-3 py-2 rounded-xl transition text-xs cursor-pointer border border-white/10 flex-1 sm:flex-none min-h-[38px] justify-center flex items-center"
+                          className="bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-gray-300 font-semibold px-3 py-2 rounded-xl transition text-xs cursor-pointer border border-slate-200 dark:border-white/10 flex-1 sm:flex-none min-h-[38px] justify-center flex items-center"
                         >
                           Bekor
                         </button>
@@ -924,57 +924,57 @@ export const InventoryPage = () => {
 
               {/* Narxlar qismi: 2+2+1 ta maydon */}
               <div className="space-y-2">
-                <div className="text-[10px] text-gray-500 uppercase tracking-wider font-semibold">Tannarxlar (Xarid narxi)</div>
+                <div className="text-[10px] text-slate-500 dark:text-gray-500 uppercase tracking-wider font-semibold">Tannarxlar (Xarid narxi)</div>
                 <div className="grid grid-cols-2 gap-2 sm:gap-3">
                   <div className="space-y-1">
-                    <label className="text-[10px] sm:text-xs text-gray-400 block">Dona tannarxi (s.):</label>
+                    <label className="text-[10px] sm:text-xs text-slate-500 dark:text-gray-400 block">Dona tannarxi (s.):</label>
                     <input
                       type="text"
                       required
-                      className="bg-slate-900 border border-white/10 rounded-xl text-white w-full p-2 focus:ring-brand-500 text-xs sm:text-sm"
+                      className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-white/10 rounded-xl text-slate-900 dark:text-white w-full p-2 focus:ring-brand-500 text-xs sm:text-sm"
                       value={editCostPrice}
                       onChange={(e) => setEditCostPrice(formatNumberWithSpaces(e.target.value))}
                     />
                   </div>
                   <div className="space-y-1">
-                    <label className="text-[10px] sm:text-xs text-gray-400 block">Quti tannarxi (s.):</label>
+                    <label className="text-[10px] sm:text-xs text-slate-500 dark:text-gray-400 block">Quti tannarxi (s.):</label>
                     <input
                       type="text"
                       required
-                      className="bg-slate-900 border border-white/10 rounded-xl text-white w-full p-2 focus:ring-brand-500 text-xs sm:text-sm"
+                      className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-white/10 rounded-xl text-slate-900 dark:text-white w-full p-2 focus:ring-brand-500 text-xs sm:text-sm"
                       value={editBoxCostPrice}
                       onChange={(e) => setEditBoxCostPrice(formatNumberWithSpaces(e.target.value))}
                     />
                   </div>
                 </div>
-                <div className="text-[10px] text-gray-500 uppercase tracking-wider font-semibold mt-1">Sotish Narxlari</div>
+                <div className="text-[10px] text-slate-500 dark:text-gray-500 uppercase tracking-wider font-semibold mt-1">Sotish Narxlari</div>
                 <div className="grid grid-cols-3 gap-2 sm:gap-3">
                   <div className="space-y-1">
-                    <label className="text-[10px] sm:text-xs text-gray-400 block">Dona narx (s.):</label>
+                    <label className="text-[10px] sm:text-xs text-slate-500 dark:text-gray-400 block">Dona narx (s.):</label>
                     <input
                       type="text"
                       required
-                      className="bg-slate-900 border border-white/10 rounded-xl text-white w-full p-2 focus:ring-brand-500 text-xs sm:text-sm"
+                      className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-white/10 rounded-xl text-slate-900 dark:text-white w-full p-2 focus:ring-brand-500 text-xs sm:text-sm"
                       value={editUnitPrice}
                       onChange={(e) => setEditUnitPrice(formatNumberWithSpaces(e.target.value))}
                     />
                   </div>
                   <div className="space-y-1">
-                    <label className="text-[10px] sm:text-xs text-gray-400 block">Quti narx (s.):</label>
+                    <label className="text-[10px] sm:text-xs text-slate-500 dark:text-gray-400 block">Quti narx (s.):</label>
                     <input
                       type="text"
                       required
-                      className="bg-slate-900 border border-white/10 rounded-xl text-white w-full p-2 focus:ring-brand-500 text-xs sm:text-sm"
+                      className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-white/10 rounded-xl text-slate-900 dark:text-white w-full p-2 focus:ring-brand-500 text-xs sm:text-sm"
                       value={editBoxPrice}
                       onChange={(e) => setEditBoxPrice(formatNumberWithSpaces(e.target.value))}
                     />
                   </div>
                   <div className="space-y-1">
-                    <label className="text-[10px] sm:text-xs text-gray-400 block">Qutida dona:</label>
+                    <label className="text-[10px] sm:text-xs text-slate-500 dark:text-gray-400 block">Qutida dona:</label>
                     <input
                       type="number"
                       required
-                      className="bg-slate-900 border border-white/10 rounded-xl text-white w-full p-2 focus:ring-brand-500 text-xs sm:text-sm"
+                      className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-white/10 rounded-xl text-slate-900 dark:text-white w-full p-2 focus:ring-brand-500 text-xs sm:text-sm"
                       value={editQuantityInBox}
                       onChange={(e) => setEditQuantityInBox(e.target.value)}
                     />
@@ -985,20 +985,20 @@ export const InventoryPage = () => {
 
               <div className="grid grid-cols-2 gap-2 sm:gap-4">
                 <div className="space-y-1">
-                  <label className="text-[10px] sm:text-xs text-gray-400 block">Qo'shish (quti):</label>
+                  <label className="text-[10px] sm:text-xs text-slate-500 dark:text-gray-400 block">Qo'shish (quti):</label>
                   <input
                     type="number"
-                    className="bg-slate-900 border border-white/10 rounded-xl text-white w-full p-2.5 focus:ring-brand-500 text-xs sm:text-sm"
+                    className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-white/10 rounded-xl text-slate-900 dark:text-white w-full p-2.5 focus:ring-brand-500 text-xs sm:text-sm"
                     value={editStockBoxes}
                     onChange={(e) => setEditStockBoxes(e.target.value)}
                   />
                 </div>
 
                 <div className="space-y-1">
-                  <label className="text-[10px] sm:text-xs text-gray-400 block">Qo'shish (dona):</label>
+                  <label className="text-[10px] sm:text-xs text-slate-500 dark:text-gray-400 block">Qo'shish (dona):</label>
                   <input
                     type="number"
-                    className="bg-slate-900 border border-white/10 rounded-xl text-white w-full p-2.5 focus:ring-brand-500 text-xs sm:text-sm"
+                    className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-white/10 rounded-xl text-slate-900 dark:text-white w-full p-2.5 focus:ring-brand-500 text-xs sm:text-sm"
                     value={editStockPieces}
                     onChange={(e) => setEditStockPieces(e.target.value)}
                   />
@@ -1006,13 +1006,13 @@ export const InventoryPage = () => {
               </div>
 
               <div className="space-y-1">
-                <label className="text-xs text-gray-400 block">Mahsulot rasmi (ixtiyoriy):</label>
+                <label className="text-xs text-slate-500 dark:text-gray-400 block">Mahsulot rasmi (ixtiyoriy):</label>
                 <div className="flex flex-col space-y-2">
                   <input
                     type="file"
                     accept="image/*,image/jpeg,image/png"
                     id="product-image-edit-upload"
-                    className="bg-slate-900 border border-white/10 rounded-xl text-white w-full p-2 text-xs"
+                    className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-white/10 rounded-xl text-slate-900 dark:text-white w-full p-2 text-xs"
                     onChange={(e) => handleImageUpload(e, true)}
                     disabled={isUploading}
                   />
@@ -1021,7 +1021,7 @@ export const InventoryPage = () => {
                     <img 
                       src={editImagePreview.startsWith('data:') ? editImagePreview : (getImageUrl(editImagePreview) || undefined)} 
                       alt="Preview" 
-                      className="h-20 w-20 object-cover rounded-lg border border-white/10" 
+                      className="h-20 w-20 object-cover rounded-lg border border-slate-200 dark:border-white/10" 
                       onError={(e) => {
                         if (!editImagePreview.startsWith('data:') && !getImageUrl(editImagePreview)) {
                           e.target.onerror = null;
@@ -1051,18 +1051,18 @@ export const InventoryPage = () => {
       {/* Expense Modal */}
       {isExpenseModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
-          <div className="glass-panel border-white/10 max-w-sm w-full rounded-2xl p-6 relative">
-            <h3 className="text-lg font-bold text-white mb-4 flex items-center gap-2">
+          <div className="glass-panel border-slate-200 dark:border-white/10 max-w-sm w-full rounded-2xl p-6 relative">
+            <h3 className="text-lg font-bold text-slate-900 dark:text-white mb-4 flex items-center gap-2">
               <DollarSign className="text-red-400" /> Boshqa xarajat qo'shish
             </h3>
             
             <form onSubmit={handleAddExpenseSubmit} className="space-y-4">
               <div>
-                <label className="text-xs text-gray-400 block mb-1">Summa (s.):</label>
+                <label className="text-xs text-slate-500 dark:text-gray-400 block mb-1">Summa (s.):</label>
                 <input
                   type="text"
                   required
-                  className="bg-slate-900 border border-white/10 rounded-xl text-white w-full p-2.5 focus:ring-brand-500 text-sm font-bold"
+                  className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-white/10 rounded-xl text-slate-900 dark:text-white w-full p-2.5 focus:ring-brand-500 text-sm font-bold"
                   value={expenseAmount}
                   onChange={(e) => setExpenseAmount(formatNumberWithSpaces(e.target.value))}
                   placeholder="Masalan: 1 000 000"
@@ -1070,11 +1070,11 @@ export const InventoryPage = () => {
               </div>
 
               <div>
-                <label className="text-xs text-gray-400 block mb-1">Izoh (Nima uchun?):</label>
+                <label className="text-xs text-slate-500 dark:text-gray-400 block mb-1">Izoh (Nima uchun?):</label>
                 <textarea
                   required
                   rows={3}
-                  className="bg-slate-900 border border-white/10 rounded-xl text-white w-full p-2.5 focus:ring-brand-500 text-sm"
+                  className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-white/10 rounded-xl text-slate-900 dark:text-white w-full p-2.5 focus:ring-brand-500 text-sm"
                   value={expenseDescription}
                   onChange={(e) => setExpenseDescription(e.target.value)}
                   placeholder="Masalan: Ijara puli, Oylik maosh..."
@@ -1085,7 +1085,7 @@ export const InventoryPage = () => {
                 <button
                   type="button"
                   onClick={() => setIsExpenseModalOpen(false)}
-                  className="flex-1 px-4 py-2 bg-slate-800 hover:bg-slate-700 text-white text-sm font-semibold rounded-xl transition border border-white/5"
+                  className="flex-1 px-4 py-2 bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-900 dark:text-white text-sm font-semibold rounded-xl transition border border-slate-200 dark:border-white/5"
                 >
                   Bekor qilish
                 </button>

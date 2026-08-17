@@ -21,6 +21,7 @@ export const StoresPage = () => {
   const [showPaymentForm, setShowPaymentForm] = useState(false);
   const [selectedStoreForPayment, setSelectedStoreForPayment] = useState(null);
   const [paymentAmount, setPaymentAmount] = useState('');
+  const [paymentDiscount, setPaymentDiscount] = useState('0'); // Chegirma
   const [paymentMethod, setPaymentMethod] = useState('CASH'); // 'CASH' or 'CARD'
   const [paymentNote, setPaymentNote] = useState('');
 
@@ -30,6 +31,7 @@ export const StoresPage = () => {
   const [telegramChatId, setTelegramChatId] = useState('');
   const [creditLimit, setCreditLimit] = useState('10 000 000'); // Default 10M
   const [paymentDays, setPaymentDays] = useState(30);       // Default 30 days
+  const [initialDebt, setInitialDebt] = useState('0');      // Boshlang'ich qarz
 
   // Edit Form states
   const [editStoreId, setEditStoreId] = useState('');
@@ -39,6 +41,8 @@ export const StoresPage = () => {
   const [editStoreTelegramChatId, setEditStoreTelegramChatId] = useState('');
   const [editStoreCreditLimit, setEditStoreCreditLimit] = useState('0');
   const [editStorePaymentDays, setEditStorePaymentDays] = useState(0);
+  const [editStoreDiscountPercent, setEditStoreDiscountPercent] = useState(0);
+  const [editStoreCurrentDebt, setEditStoreCurrentDebt] = useState('0');
 
   useEffect(() => {
     fetchStores();
@@ -73,6 +77,7 @@ export const StoresPage = () => {
       telegramChatId: telegramChatId || undefined,
       creditLimit: parseNumberFromSpaces(creditLimit),
       paymentDays: Number(paymentDays),
+      initialDebt: parseNumberFromSpaces(initialDebt),
     };
 
 
@@ -85,6 +90,7 @@ export const StoresPage = () => {
       setTelegramChatId('');
       setCreditLimit('10 000 000');
       setPaymentDays(30);
+      setInitialDebt('0');
       setShowAddForm(false);
       fetchStores();
       toast.success("Do'kon muvaffaqiyatli qo'shildi!");
@@ -120,6 +126,8 @@ export const StoresPage = () => {
     setEditStoreTelegramChatId(store.telegramChatId || '');
     setEditStoreCreditLimit(formatNumberWithSpaces(store.creditLimit));
     setEditStorePaymentDays(store.paymentDays);
+    setEditStoreDiscountPercent(store.discountPercent || 0);
+    setEditStoreCurrentDebt(formatNumberWithSpaces(store.currentDebt || 0));
     setShowEditForm(true);
   };
 
@@ -138,6 +146,8 @@ export const StoresPage = () => {
       telegramChatId: editStoreTelegramChatId || undefined,
       creditLimit: parseNumberFromSpaces(editStoreCreditLimit),
       paymentDays: Number(editStorePaymentDays),
+      discountPercent: Number(editStoreDiscountPercent),
+      currentDebt: parseNumberFromSpaces(editStoreCurrentDebt),
     };
 
 
@@ -174,6 +184,7 @@ export const StoresPage = () => {
     }
     setSelectedStoreForPayment(store);
     setPaymentAmount(formatNumberWithSpaces(Math.round(Number(store.currentDebt))));
+    setPaymentDiscount('0');
     setPaymentMethod('CASH');
     setPaymentNote('');
     setShowPaymentForm(true);
@@ -182,17 +193,21 @@ export const StoresPage = () => {
   const handlePaySubmit = async (e) => {
     e.preventDefault();
     const amt = parseNumberFromSpaces(paymentAmount);
-    if (isNaN(amt) || amt <= 0) {
-      toast.error("Musbat to'lov summasini kiriting!");
+    const disc = parseNumberFromSpaces(paymentDiscount);
+    const totalDeduction = amt + disc;
+
+    if (isNaN(amt) || isNaN(disc) || amt < 0 || disc < 0 || totalDeduction <= 0) {
+      toast.error("Noto'g'ri to'lov yoki chegirma summasi kiritildi!");
       return;
     }
-    if (amt > Number(selectedStoreForPayment.currentDebt)) {
-      toast.error(`To'lov summasi joriy qarzdan (${Number(selectedStoreForPayment.currentDebt).toLocaleString()} so'm) oshib ketishi mumkin emas!`);
+    if (totalDeduction > Number(selectedStoreForPayment.currentDebt)) {
+      toast.error(`To'lov va chegirma summasi joriy qarzdan (${Number(selectedStoreForPayment.currentDebt).toLocaleString()} so'm) oshib ketishi mumkin emas!`);
       return;
     }
 
     const res = await addStorePayment(selectedStoreForPayment.id, {
       amount: amt,
+      discount: disc,
       paymentMethod,
       note: paymentNote,
     });
@@ -262,7 +277,7 @@ export const StoresPage = () => {
       {/* Top action header */}
       <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-4">
         <div className="relative max-w-md w-full md:w-96 shrink-0">
-          <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
+          <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-500 dark:text-slate-400">
             <Search size={18} />
           </div>
           
@@ -271,14 +286,14 @@ export const StoresPage = () => {
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             placeholder="Do'kon nomi, egasi yoki telefoni..."
-            className="w-full pl-11 pr-10 py-2.5 bg-slate-900/90 border border-slate-700/80 rounded-xl text-slate-100 placeholder-slate-400 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition shadow-inner min-h-[40px]"
+            className="w-full pl-11 pr-10 py-2.5 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-xl text-slate-900 dark:text-slate-100 placeholder-slate-400 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition shadow-inner min-h-[40px]"
           />
           
           {searchQuery && (
             <button
               type="button"
               onClick={() => setSearchQuery('')}
-              className="absolute inset-y-0 right-0 pr-3.5 flex items-center text-slate-400 hover:text-slate-200 transition cursor-pointer"
+              className="absolute inset-y-0 right-0 pr-3.5 flex items-center text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 transition cursor-pointer"
             >
               <X size={16} />
             </button>
@@ -309,14 +324,14 @@ export const StoresPage = () => {
                 key={store.id}
                 onClick={() => handleViewStore(store)}
                 className={`glass-panel glass-card-hover rounded-2xl p-5 border cursor-pointer flex flex-col justify-between ${
-                  isOverdue ? 'glow-warning border-red-500/40 bg-red-950/5' : 'border-white/5'
+                  isOverdue ? 'glow-warning border-red-500/40 bg-red-950/5' : 'border-slate-200 dark:border-white/5'
                 }`}
               >
                 <div>
                   <div className="flex justify-between items-start mb-3">
                     <div>
-                      <h3 className="font-bold text-white text-base">{store.name}</h3>
-                      <p className="text-xs text-gray-400 flex items-center mt-1">
+                      <h3 className="font-bold text-slate-900 dark:text-white text-base">{store.name}</h3>
+                      <p className="text-xs text-slate-500 dark:text-gray-400 flex items-center mt-1">
                         <UserPlus size={12} className="mr-1 text-brand-300" />
                         <span>Egasi: {store.ownerName}</span>
                       </p>
@@ -362,15 +377,15 @@ export const StoresPage = () => {
                     </div>
                   </div>
 
-                  <div className="text-xs text-gray-400 space-y-2 mt-4">
+                  <div className="text-xs text-slate-500 dark:text-gray-400 space-y-2 mt-4">
                     <div className="flex items-center space-x-2">
-                      <Phone size={14} className="text-gray-500" />
-                      <span className="text-gray-300 font-mono">{store.phone}</span>
+                      <Phone size={14} className="text-slate-500 dark:text-gray-500" />
+                      <span className="text-slate-700 dark:text-gray-300 font-mono">{store.phone}</span>
                     </div>
                     <div className="flex items-center space-x-2">
-                      <Calendar size={14} className="text-gray-500" />
+                      <Calendar size={14} className="text-slate-500 dark:text-gray-500" />
                       {remainingInfo.status === 'none' ? (
-                        <span className="text-gray-400">Nasiya muddati: {store.paymentDays} kun</span>
+                        <span className="text-slate-500 dark:text-gray-400">Nasiya muddati: {store.paymentDays} kun</span>
                       ) : (
                         <span className={`font-semibold ${
                           remainingInfo.status === 'danger' ? 'text-red-400' :
@@ -387,16 +402,16 @@ export const StoresPage = () => {
                   </div>
                 </div>
 
-                <div className="mt-6 pt-4 border-t border-white/5 space-y-2">
+                <div className="mt-6 pt-4 border-t border-slate-200 dark:border-white/5 space-y-2">
                   <div className="flex justify-between text-xs">
-                    <span className="text-gray-400">Qarz / Limit:</span>
-                    <span className="font-semibold text-white">
+                    <span className="text-slate-500 dark:text-gray-400">Qarz / Limit:</span>
+                    <span className="font-semibold text-slate-900 dark:text-white">
                       {currentDebt.toLocaleString()} / {creditLimit.toLocaleString()} s.
                     </span>
                   </div>
 
                   {/* Credit limit visual gauge progress bar */}
-                  <div className="w-full bg-slate-900 rounded-full h-1.5 overflow-hidden">
+                  <div className="w-full bg-white dark:bg-slate-900 rounded-full h-1.5 overflow-hidden">
                     <div
                       className={`h-full rounded-full ${
                         debtPercent >= 90 ? 'bg-red-500' : debtPercent >= 60 ? 'bg-yellow-500' : 'bg-brand-500'
@@ -404,7 +419,7 @@ export const StoresPage = () => {
                       style={{ width: `${Math.min(100, debtPercent)}%` }}
                     ></div>
                   </div>
-                  <div className="flex justify-between text-[10px] text-gray-500">
+                  <div className="flex justify-between text-[10px] text-slate-500 dark:text-gray-500">
                     <span>Qarz foizi:</span>
                     <span>{debtPercent.toFixed(1)}%</span>
                   </div>
@@ -418,50 +433,50 @@ export const StoresPage = () => {
       {/* Add B2B Store Modal Overlay */}
       {showAddForm && (
         <div className="fixed inset-0 bg-black/85 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-          <div className="glass-panel border-white/10 max-w-md w-full rounded-2xl p-6 relative">
+          <div className="glass-panel border-slate-200 dark:border-white/10 max-w-md w-full rounded-2xl p-6 relative">
             <button
               onClick={() => setShowAddForm(false)}
-              className="absolute top-4 right-4 text-gray-400 hover:text-white"
+              className="absolute top-4 right-4 text-slate-500 dark:text-gray-400 hover:text-slate-900 dark:text-white"
             >
               <X size={20} />
             </button>
-            <h2 className="text-lg font-bold text-white mb-4 flex items-center space-x-2">
+            <h2 className="text-lg font-bold text-slate-900 dark:text-white mb-4 flex items-center space-x-2">
               <UserPlus className="text-brand-400" />
               <span>Yangi Do'kon (Hamkor) Qo'shish</span>
             </h2>
 
-            <form onSubmit={handleRegisterStore} className="space-y-4 text-sm text-gray-300">
+            <form onSubmit={handleRegisterStore} className="space-y-4 text-sm text-slate-700 dark:text-gray-300">
               <div className="space-y-1">
-                <label className="text-xs text-gray-400 block">Do'kon Nomi (Yuridik/Savdo nomi):</label>
+                <label className="text-xs text-slate-500 dark:text-gray-400 block">Do'kon Nomi (Yuridik/Savdo nomi):</label>
                 <input
                   type="text"
                   required
                   placeholder="Masalan: Sweet House, Shokolad Dunyosi..."
-                  className="bg-slate-900 border border-white/10 rounded-xl text-white w-full p-2.5 focus:ring-brand-500 focus:border-brand-500"
+                  className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-white/10 rounded-xl text-slate-900 dark:text-white w-full p-2.5 focus:ring-brand-500 focus:border-brand-500"
                   value={name}
                   onChange={(e) => setName(e.target.value)}
                 />
               </div>
 
               <div className="space-y-1">
-                <label className="text-xs text-gray-400 block">Do'kondor (Egasi ismi):</label>
+                <label className="text-xs text-slate-500 dark:text-gray-400 block">Do'kondor (Egasi ismi):</label>
                 <input
                   type="text"
                   required
                   placeholder="Masalan: Elyor Alimov..."
-                  className="bg-slate-900 border border-white/10 rounded-xl text-white w-full p-2.5 focus:ring-brand-500 focus:border-brand-500"
+                  className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-white/10 rounded-xl text-slate-900 dark:text-white w-full p-2.5 focus:ring-brand-500 focus:border-brand-500"
                   value={ownerName}
                   onChange={(e) => setOwnerName(e.target.value)}
                 />
               </div>
 
               <div className="space-y-1">
-                <label className="text-xs text-gray-400 block">Telefon raqam:</label>
+                <label className="text-xs text-slate-500 dark:text-gray-400 block">Telefon raqam:</label>
                 <input
                   type="text"
                   required
                   placeholder="Masalan: +998901234567"
-                  className="bg-slate-900 border border-white/10 rounded-xl text-white font-mono w-full p-2.5 focus:ring-brand-500 focus:border-brand-500"
+                  className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-white/10 rounded-xl text-slate-900 dark:text-white font-mono w-full p-2.5 focus:ring-brand-500 focus:border-brand-500"
                   value={phone}
                   onChange={(e) => setPhone(e.target.value)}
                 />
@@ -469,26 +484,37 @@ export const StoresPage = () => {
 
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-1">
-                  <label className="text-xs text-gray-400 block">Kredit limiti (so'm):</label>
+                  <label className="text-xs text-slate-500 dark:text-gray-400 block">Kredit limiti (so'm):</label>
                   <input
                     type="text"
                     required
-                    className="bg-slate-900 border border-white/10 rounded-xl text-white w-full p-2.5 focus:ring-brand-500 focus:border-brand-500"
+                    className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-white/10 rounded-xl text-slate-900 dark:text-white w-full p-2.5 focus:ring-brand-500 focus:border-brand-500"
                     value={creditLimit}
                     onChange={(e) => setCreditLimit(formatNumberWithSpaces(e.target.value))}
                   />
                 </div>
 
                 <div className="space-y-1">
-                  <label className="text-xs text-gray-400 block">Nasiya kuni:</label>
+                  <label className="text-xs text-slate-500 dark:text-gray-400 block">Nasiya kuni:</label>
                   <input
                     type="number"
                     required
-                    className="bg-slate-900 border border-white/10 rounded-xl text-white w-full p-2.5 focus:ring-brand-500 focus:border-brand-500"
+                    className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-white/10 rounded-xl text-slate-900 dark:text-white w-full p-2.5 focus:ring-brand-500 focus:border-brand-500"
                     value={paymentDays}
                     onChange={(e) => setPaymentDays(e.target.value)}
                   />
                 </div>
+              </div>
+
+              <div className="space-y-1">
+                <label className="text-xs text-slate-500 dark:text-gray-400 block">Boshlang'ich qarz (so'm):</label>
+                <input
+                  type="text"
+                  placeholder="0 (agar qarzi bo'lsa kiriting)"
+                  className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-white/10 rounded-xl text-slate-900 dark:text-white w-full p-2.5 focus:ring-brand-500 focus:border-brand-500 font-mono"
+                  value={initialDebt}
+                  onChange={(e) => setInitialDebt(formatNumberWithSpaces(e.target.value))}
+                />
               </div>
 
               <button
@@ -505,17 +531,17 @@ export const StoresPage = () => {
       {/* Store In-App Invoice History Details Modal */}
       {selectedStore && (
         <div className="fixed inset-0 bg-black/85 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-          <div className="glass-panel border-white/10 max-w-2xl w-full rounded-2xl p-6 relative flex flex-col max-h-[85vh]">
+          <div className="glass-panel border-slate-200 dark:border-white/10 max-w-2xl w-full rounded-2xl p-6 relative flex flex-col max-h-[85vh]">
             <button
               onClick={() => setSelectedStore(null)}
-              className="absolute top-4 right-4 text-gray-400 hover:text-white"
+              className="absolute top-4 right-4 text-slate-500 dark:text-gray-400 hover:text-slate-900 dark:text-white"
             >
               <X size={20} />
             </button>
             
             <div className="mb-4">
-              <h2 className="text-lg font-bold text-white">{selectedStore.name}</h2>
-              <p className="text-xs text-gray-400 flex items-center mt-1">
+              <h2 className="text-lg font-bold text-slate-900 dark:text-white">{selectedStore.name}</h2>
+              <p className="text-xs text-slate-500 dark:text-gray-400 flex items-center mt-1">
                 <span>Egasi: {selectedStore.ownerName}</span>
                 <span className="mx-2">•</span>
                 <span className="font-mono">{selectedStore.phone}</span>
@@ -523,13 +549,13 @@ export const StoresPage = () => {
             </div>
 
             {/* Tab switch buttons */}
-            <div className="flex border-b border-white/5 mb-4 text-xs font-semibold">
+            <div className="flex border-b border-slate-200 dark:border-white/5 mb-4 text-xs font-semibold">
               <button
                 onClick={() => setActiveDetailTab('orders')}
                 className={`pb-2.5 px-4 relative ${
                   activeDetailTab === 'orders'
                     ? 'text-brand-400 border-b-2 border-brand-500 font-bold'
-                    : 'text-gray-400 hover:text-gray-200'
+                    : 'text-slate-500 dark:text-gray-400 hover:text-slate-700 dark:hover:text-gray-200'
                 }`}
               >
                 Savdo Tarixi
@@ -539,7 +565,7 @@ export const StoresPage = () => {
                 className={`pb-2.5 px-4 relative ${
                   activeDetailTab === 'payments'
                     ? 'text-brand-400 border-b-2 border-brand-500 font-bold'
-                    : 'text-gray-400 hover:text-gray-200'
+                    : 'text-slate-500 dark:text-gray-400 hover:text-slate-700 dark:hover:text-gray-200'
                 }`}
               >
                 To'lovlar Tarixi
@@ -550,9 +576,9 @@ export const StoresPage = () => {
             <div className="flex-1 overflow-y-auto space-y-4 pr-1 my-2">
               {activeDetailTab === 'orders' ? (
                 ordersLoading ? (
-                  <div className="text-center py-8 text-sm text-gray-500">Tarix yuklanmoqda...</div>
+                  <div className="text-center py-8 text-sm text-slate-500 dark:text-gray-500">Tarix yuklanmoqda...</div>
                 ) : storeOrders.length === 0 ? (
-                  <div className="text-center py-8 text-sm text-gray-500">
+                  <div className="text-center py-8 text-sm text-slate-500 dark:text-gray-500">
                     <FileText size={32} className="mx-auto mb-2 opacity-20" />
                     <span>Xaridlar tarixi mavjud emas</span>
                   </div>
@@ -560,25 +586,25 @@ export const StoresPage = () => {
                   storeOrders.map((order) => {
                     const isOrderOverdue = new Date(order.dueDate) <= new Date() && order.debtAmount > 0;
                     return (
-                      <div key={order.id} className="glass-card rounded-xl p-4 border border-white/5 space-y-3">
+                      <div key={order.id} className="glass-card rounded-xl p-4 border border-slate-200 dark:border-white/5 space-y-3">
                         <div className="flex justify-between items-center text-xs">
-                          <span className="font-mono text-gray-400">ID: #{order.id.slice(0, 8)}</span>
-                          <span className="text-gray-500">{new Date(order.createdAt).toLocaleString()}</span>
+                          <span className="font-mono text-slate-500 dark:text-gray-400">ID: #{order.id.slice(0, 8)}</span>
+                          <span className="text-slate-500 dark:text-gray-500">{new Date(order.createdAt).toLocaleString()}</span>
                         </div>
 
                         {/* Items details list */}
-                        <div className="bg-slate-950/30 rounded-lg p-2 space-y-1 text-xs">
+                        <div className="bg-slate-50/30 dark:bg-slate-950/30 rounded-lg p-2 space-y-1 text-xs">
                           {order.items?.map(item => (
-                            <div key={item.id} className="flex justify-between text-gray-300">
+                            <div key={item.id} className="flex justify-between text-slate-700 dark:text-gray-300">
                               <span>{item.product?.name} ({item.quantity} {item.unitType})</span>
                               <span className="font-mono">{Number(item.totalPrice).toLocaleString()} s.</span>
                             </div>
                           ))}
                         </div>
 
-                        <div className="flex justify-between items-center pt-2 border-t border-white/5 text-xs">
+                        <div className="flex justify-between items-center pt-2 border-t border-slate-200 dark:border-white/5 text-xs">
                            <div className="space-y-1">
-                             <div>Jami: <span className="font-bold text-white">{Number(order.totalAmount).toLocaleString()} s.</span></div>
+                             <div>Jami: <span className="font-bold text-slate-900 dark:text-white">{Number(order.totalAmount).toLocaleString()} s.</span></div>
                              <div>Sof Foyda: <span className="font-bold text-emerald-400">{Number(order.items?.reduce((total, item) => {
                                const qtyInPieces = item.unitType === 'BOX' 
                                  ? item.quantity * (item.product?.quantityInBox || 1)
@@ -587,11 +613,12 @@ export const StoresPage = () => {
                                const sale = Number(item.totalPrice);
                                return total + (sale - cost);
                              }, 0) || 0).toLocaleString()} s.</span></div>
-                             <div>Qarz: <span className={`font-semibold ${order.debtAmount > 0 ? 'text-red-400' : 'text-gray-400'}`}>{Number(order.debtAmount).toLocaleString()} s.</span></div>
+                             <div>Qarz: <span className={`font-semibold ${order.debtAmount > 0 ? 'text-red-400' : 'text-slate-500 dark:text-gray-400'}`}>{Number(order.debtAmount).toLocaleString()} s.</span></div>
                            </div>
 
                           <div className="text-right space-y-1">
-                            <div className="text-gray-400">Muddat: <span className={isOrderOverdue ? 'text-red-400 font-bold' : 'text-gray-300'}>{new Date(order.dueDate).toLocaleDateString()}</span></div>
+                            <div className="text-slate-500 dark:text-gray-400">Sotuvchi: <span className="text-slate-700 dark:text-gray-300 font-medium">{order.createdBy?.name || order.createdBy?.username || 'Admin'}</span></div>
+                            <div className="text-slate-500 dark:text-gray-400">Muddat: <span className={isOrderOverdue ? 'text-red-400 font-bold' : 'text-slate-700 dark:text-gray-300'}>{new Date(order.dueDate).toLocaleDateString()}</span></div>
                             <span className={`inline-block text-[10px] px-2 py-0.5 rounded-full font-bold uppercase ${
                               order.status === 'PAID' 
                                 ? 'bg-green-500/20 text-green-400 border border-green-500/30' 
@@ -609,18 +636,18 @@ export const StoresPage = () => {
                 )
               ) : (
                 ordersLoading ? (
-                  <div className="text-center py-8 text-sm text-gray-500">Tarix yuklanmoqda...</div>
+                  <div className="text-center py-8 text-sm text-slate-500 dark:text-gray-500">Tarix yuklanmoqda...</div>
                 ) : storePayments.length === 0 ? (
-                  <div className="text-center py-8 text-sm text-gray-500">
+                  <div className="text-center py-8 text-sm text-slate-500 dark:text-gray-500">
                     <DollarSign size={32} className="mx-auto mb-2 opacity-20" />
                     <span>To'lovlar tarixi mavjud emas</span>
                   </div>
                 ) : (
                   storePayments.map((payment) => (
-                    <div key={payment.id} className="glass-card rounded-xl p-4 border border-white/5 flex justify-between items-center text-xs">
+                    <div key={payment.id} className="glass-card rounded-xl p-4 border border-slate-200 dark:border-white/5 flex justify-between items-center text-xs">
                       <div>
-                        <div className="font-semibold text-white">To'lov summasi: <span className="text-emerald-400 font-bold">{Number(payment.amount).toLocaleString()} s.</span></div>
-                        <div className="text-gray-500 mt-1 flex items-center">
+                        <div className="font-semibold text-slate-900 dark:text-white">To'lov summasi: <span className="text-emerald-400 font-bold">{Number(payment.amount).toLocaleString()} s.</span></div>
+                        <div className="text-slate-500 dark:text-gray-500 mt-1 flex items-center">
                           <span className={`inline-block text-[9px] px-1.5 py-0.5 rounded font-bold uppercase mr-2 ${
                             payment.paymentMethod === 'CASH' 
                               ? 'bg-yellow-500/20 text-yellow-400 border border-yellow-500/20' 
@@ -628,10 +655,10 @@ export const StoresPage = () => {
                           }`}>
                             {payment.paymentMethod === 'CASH' ? '💵 Naqd' : '💳 Karta'}
                           </span>
-                          {payment.note && <span className="text-gray-400 italic">Izoh: {payment.note}</span>}
+                          {payment.note && <span className="text-slate-500 dark:text-gray-400 italic">Izoh: {payment.note}</span>}
                         </div>
                       </div>
-                      <div className="text-right text-gray-400">
+                      <div className="text-right text-slate-500 dark:text-gray-400">
                         {new Date(payment.createdAt).toLocaleString()}
                       </div>
                     </div>
@@ -640,14 +667,14 @@ export const StoresPage = () => {
               )}
             </div>
 
-            <div className="border-t border-white/5 pt-4 flex justify-between items-center mt-2 text-xs">
+            <div className="border-t border-slate-200 dark:border-white/5 pt-4 flex justify-between items-center mt-2 text-xs">
               <div className="space-y-1">
-                <span className="text-gray-400">Joriy qarz balansi:</span>
-                <div className="font-bold text-white text-base">{Number(selectedStore.currentDebt).toLocaleString()} so'm</div>
+                <span className="text-slate-500 dark:text-gray-400">Joriy qarz balansi:</span>
+                <div className="font-bold text-slate-900 dark:text-white text-base">{Number(selectedStore.currentDebt).toLocaleString()} so'm</div>
               </div>
               <button
                 onClick={() => setSelectedStore(null)}
-                className="bg-slate-800 hover:bg-slate-700 text-white font-bold py-2 px-4 rounded-xl transition border border-white/10 hover:border-white/20 cursor-pointer"
+                className="bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-900 dark:text-white font-bold py-2 px-4 rounded-xl transition border border-slate-200 dark:border-white/10 hover:border-white/20 cursor-pointer"
               >
                 Yopish
               </button>
@@ -659,47 +686,47 @@ export const StoresPage = () => {
       {/* Edit Store Modal Overlay */}
       {showEditForm && (
         <div className="fixed inset-0 bg-black/85 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-          <div className="glass-panel border-white/10 max-w-md w-full rounded-2xl p-6 relative">
+          <div className="glass-panel border-slate-200 dark:border-white/10 max-w-md w-full rounded-2xl p-6 relative">
             <button
               onClick={() => setShowEditForm(false)}
-              className="absolute top-4 right-4 text-gray-400 hover:text-white"
+              className="absolute top-4 right-4 text-slate-500 dark:text-gray-400 hover:text-slate-900 dark:text-white"
             >
               <X size={20} />
             </button>
-            <h2 className="text-lg font-bold text-white mb-4 flex items-center space-x-2">
+            <h2 className="text-lg font-bold text-slate-900 dark:text-white mb-4 flex items-center space-x-2">
               <Pencil className="text-blue-400" />
               <span>Do'kon Ma'lumotlarini Tahrirlash</span>
             </h2>
 
-            <form onSubmit={handleUpdateStore} className="space-y-4 text-sm text-gray-300">
+            <form onSubmit={handleUpdateStore} className="space-y-4 text-sm text-slate-700 dark:text-gray-300">
               <div className="space-y-1">
-                <label className="text-xs text-gray-400 block">Do'kon Nomi:</label>
+                <label className="text-xs text-slate-500 dark:text-gray-400 block">Do'kon Nomi:</label>
                 <input
                   type="text"
                   required
-                  className="bg-slate-900 border border-white/10 rounded-xl text-white w-full p-2.5 focus:ring-brand-500 focus:border-brand-500"
+                  className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-white/10 rounded-xl text-slate-900 dark:text-white w-full p-2.5 focus:ring-brand-500 focus:border-brand-500"
                   value={editStoreName}
                   onChange={(e) => setEditStoreName(e.target.value)}
                 />
               </div>
 
               <div className="space-y-1">
-                <label className="text-xs text-gray-400 block">Egasining Ismi:</label>
+                <label className="text-xs text-slate-500 dark:text-gray-400 block">Egasining Ismi:</label>
                 <input
                   type="text"
                   required
-                  className="bg-slate-900 border border-white/10 rounded-xl text-white w-full p-2.5 focus:ring-brand-500 focus:border-brand-500"
+                  className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-white/10 rounded-xl text-slate-900 dark:text-white w-full p-2.5 focus:ring-brand-500 focus:border-brand-500"
                   value={editStoreOwnerName}
                   onChange={(e) => setEditStoreOwnerName(e.target.value)}
                 />
               </div>
 
               <div className="space-y-1">
-                <label className="text-xs text-gray-400 block">Telefon raqam:</label>
+                <label className="text-xs text-slate-500 dark:text-gray-400 block">Telefon raqam:</label>
                 <input
                   type="text"
                   required
-                  className="bg-slate-900 border border-white/10 rounded-xl text-white font-mono w-full p-2.5 focus:ring-brand-500 focus:border-brand-500"
+                  className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-white/10 rounded-xl text-slate-900 dark:text-white font-mono w-full p-2.5 focus:ring-brand-500 focus:border-brand-500"
                   value={editStorePhone}
                   onChange={(e) => setEditStorePhone(e.target.value)}
                 />
@@ -707,24 +734,48 @@ export const StoresPage = () => {
 
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-1">
-                  <label className="text-xs text-gray-400 block">Qarz Limiti (so'm):</label>
+                  <label className="text-xs text-slate-500 dark:text-gray-400 block">Qarz Limiti (so'm):</label>
                   <input
                     type="text"
                     required
-                    className="bg-slate-900 border border-white/10 rounded-xl text-white w-full p-2.5 focus:ring-brand-500"
+                    className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-white/10 rounded-xl text-slate-900 dark:text-white w-full p-2.5 focus:ring-brand-500"
                     value={editStoreCreditLimit}
                     onChange={(e) => setEditStoreCreditLimit(formatNumberWithSpaces(e.target.value))}
                   />
                 </div>
 
                 <div className="space-y-1">
-                  <label className="text-xs text-gray-400 block">Nasiya kuni:</label>
+                  <label className="text-xs text-slate-500 dark:text-gray-400 block">Nasiya kuni:</label>
                   <input
                     type="number"
                     required
-                    className="bg-slate-900 border border-white/10 rounded-xl text-white w-full p-2.5 focus:ring-brand-500"
+                    className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-white/10 rounded-xl text-slate-900 dark:text-white w-full p-2.5 focus:ring-brand-500"
                     value={editStorePaymentDays}
                     onChange={(e) => setEditStorePaymentDays(e.target.value)}
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-1">
+                  <label className="text-xs text-slate-500 dark:text-gray-400 block">Joriy qarzni tuzatish (so'm):</label>
+                  <input
+                    type="text"
+                    required
+                    className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-white/10 rounded-xl text-slate-900 dark:text-white w-full p-2.5 focus:ring-brand-500 font-mono"
+                    value={editStoreCurrentDebt}
+                    onChange={(e) => setEditStoreCurrentDebt(formatNumberWithSpaces(e.target.value))}
+                  />
+                </div>
+
+                <div className="space-y-1">
+                  <label className="text-xs text-slate-500 dark:text-gray-400 block">Doimiy chegirma (%):</label>
+                  <input
+                    type="number"
+                    required
+                    className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-white/10 rounded-xl text-slate-900 dark:text-white w-full p-2.5 focus:ring-brand-500"
+                    value={editStoreDiscountPercent}
+                    onChange={(e) => setEditStoreDiscountPercent(e.target.value)}
                   />
                 </div>
               </div>
@@ -743,38 +794,56 @@ export const StoresPage = () => {
       {/* Accept Payment Modal Overlay */}
       {showPaymentForm && (
         <div className="fixed inset-0 bg-black/85 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-          <div className="glass-panel border-white/10 max-w-md w-full rounded-2xl p-6 relative">
+          <div className="glass-panel border-slate-200 dark:border-white/10 max-w-md w-full rounded-2xl p-6 relative">
             <button
               onClick={() => setShowPaymentForm(false)}
-              className="absolute top-4 right-4 text-gray-400 hover:text-white"
+              className="absolute top-4 right-4 text-slate-500 dark:text-gray-400 hover:text-slate-900 dark:text-white"
             >
               <X size={20} />
             </button>
-            <h2 className="text-lg font-bold text-white mb-4 flex items-center space-x-2">
+            <h2 className="text-lg font-bold text-slate-900 dark:text-white mb-4 flex items-center space-x-2">
               <DollarSign className="text-emerald-400" />
               <span>To'lov Qabul Qilish</span>
             </h2>
 
-            <div className="bg-slate-900/50 p-3 rounded-xl border border-white/5 mb-4 text-xs">
-              <div className="text-gray-400">Mijoz do'kon: <span className="text-white font-bold">{selectedStoreForPayment?.name}</span></div>
-              <div className="text-gray-400 mt-1">Joriy qarz balansi: <span className="text-red-400 font-bold font-mono">{Number(selectedStoreForPayment?.currentDebt).toLocaleString()} so'm</span></div>
+            <div className="bg-slate-100/50 dark:bg-slate-900/40  p-3 rounded-xl border border-slate-200 dark:border-white/5 mb-4 text-xs">
+              <div className="text-slate-500 dark:text-gray-400">Mijoz do'kon: <span className="text-slate-900 dark:text-white font-bold">{selectedStoreForPayment?.name}</span></div>
+              <div className="text-slate-500 dark:text-gray-400 mt-1">Joriy qarz balansi: <span className="text-red-400 font-bold font-mono">{Number(selectedStoreForPayment?.currentDebt).toLocaleString()} so'm</span></div>
             </div>
 
-            <form onSubmit={handlePaySubmit} className="space-y-4 text-sm text-gray-300">
+            <form onSubmit={handlePaySubmit} className="space-y-4 text-sm text-slate-700 dark:text-gray-300">
               <div className="space-y-1">
-                <label className="text-xs text-gray-400 block font-semibold">To'lov summasi (so'm):</label>
+                <label className="text-xs text-slate-500 dark:text-gray-400 block font-semibold">To'lov summasi (so'm):</label>
                 <input
                   type="text"
                   required
                   placeholder="Summani kiriting..."
-                  className="bg-slate-900 border border-white/10 rounded-xl text-white font-bold font-mono w-full p-2.5 focus:ring-emerald-500 focus:border-emerald-500"
+                  className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-white/10 rounded-xl text-slate-900 dark:text-white font-bold font-mono w-full p-2.5 focus:ring-emerald-500 focus:border-emerald-500"
                   value={paymentAmount}
                   onChange={(e) => setPaymentAmount(formatNumberWithSpaces(e.target.value))}
                 />
               </div>
 
               <div className="space-y-1">
-                <label className="text-xs text-gray-400 block font-semibold">To'lov usuli:</label>
+                <label className="text-xs text-slate-500 dark:text-gray-400 block font-semibold">Chegirma / Qarzdan kechish (so'm):</label>
+                <input
+                  type="text"
+                  placeholder="0 (agar chegirma berilsa kiriting)"
+                  className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-white/10 rounded-xl text-slate-900 dark:text-white font-bold font-mono w-full p-2.5 focus:ring-emerald-500 focus:border-emerald-500"
+                  value={paymentDiscount}
+                  onChange={(e) => setPaymentDiscount(formatNumberWithSpaces(e.target.value))}
+                />
+              </div>
+
+              <div className="bg-emerald-500/10 p-3 rounded-xl border border-emerald-500/20 text-xs">
+                <div className="text-slate-500 dark:text-gray-400">Yangi qoldiq qarz:</div>
+                <div className="text-emerald-500 dark:text-emerald-400 font-bold font-mono text-base mt-0.5">
+                  {formatNumberWithSpaces(Math.max(0, Number(selectedStoreForPayment?.currentDebt) - (parseNumberFromSpaces(paymentAmount) || 0) - (parseNumberFromSpaces(paymentDiscount) || 0)))} so'm
+                </div>
+              </div>
+
+              <div className="space-y-1">
+                <label className="text-xs text-slate-500 dark:text-gray-400 block font-semibold">To'lov usuli:</label>
                 <div className="grid grid-cols-2 gap-4">
                   <button
                     type="button"
@@ -782,7 +851,7 @@ export const StoresPage = () => {
                     className={`py-3 px-4 rounded-xl font-bold border transition flex items-center justify-center space-x-2 cursor-pointer ${
                       paymentMethod === 'CASH'
                         ? 'bg-emerald-500/20 text-emerald-400 border-emerald-500/50 shadow'
-                        : 'bg-slate-900 border-white/10 text-gray-400 hover:text-gray-200'
+                        : 'bg-white dark:bg-slate-900 border-slate-200 dark:border-white/10 text-slate-500 dark:text-gray-400 hover:text-slate-700 dark:hover:text-gray-200'
                     }`}
                   >
                     <span>💵</span>
@@ -795,7 +864,7 @@ export const StoresPage = () => {
                     className={`py-3 px-4 rounded-xl font-bold border transition flex items-center justify-center space-x-2 cursor-pointer ${
                       paymentMethod === 'CARD'
                         ? 'bg-emerald-500/20 text-emerald-400 border-emerald-500/50 shadow'
-                        : 'bg-slate-900 border-white/10 text-gray-400 hover:text-gray-200'
+                        : 'bg-white dark:bg-slate-900 border-slate-200 dark:border-white/10 text-slate-500 dark:text-gray-400 hover:text-slate-700 dark:hover:text-gray-200'
                     }`}
                   >
                     <span>💳</span>
@@ -805,11 +874,11 @@ export const StoresPage = () => {
               </div>
 
               <div className="space-y-1">
-                <label className="text-xs text-gray-400 block">Izoh / Tranzaksiya ma'lumoti:</label>
+                <label className="text-xs text-slate-500 dark:text-gray-400 block">Izoh / Tranzaksiya ma'lumoti:</label>
                 <textarea
                   placeholder="Masalan: Click orqali to'landi..."
                   rows={3}
-                  className="bg-slate-900 border border-white/10 rounded-xl text-white w-full p-2.5 focus:ring-emerald-500 focus:border-emerald-500 text-xs"
+                  className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-white/10 rounded-xl text-slate-900 dark:text-white w-full p-2.5 focus:ring-emerald-500 focus:border-emerald-500 text-xs"
                   value={paymentNote}
                   onChange={(e) => setPaymentNote(e.target.value)}
                 />

@@ -79,7 +79,27 @@ export const AnalyticsPage = () => {
       const response = await api.get('/reports/sales', {
         params: { period, _t: Date.now() },
       });
-      setReport(response.data.data.report);
+      // TAQDIMOT HOLATI UCHUN BARCHA QIYMATLAR 0 GA O'ZGARTIRILDI
+      setReport({
+        systemBalance: 0,
+        totalExpenses: 0,
+        totalOtherExpenses: 0,
+        totalSales: 0,
+        totalPaid: 0,
+        totalDebt: 0,
+        totalBoxesSold: 0,
+        totalPiecesSold: 0,
+        netProfit: 0,
+        profitPercentage: 0,
+        topProducts: [],
+        topStores: [],
+        topSellers: [],
+        expensesList: [],
+        productProfitList: [],
+        salesHistory: [],
+        debtStores: [],
+        soldProductsList: []
+      });
     } catch (err) {
       if (!silent) setError(err.response?.data?.message || 'Failed to fetch sales analytics');
     } finally {

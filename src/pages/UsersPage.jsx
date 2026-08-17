@@ -12,6 +12,10 @@ export const UsersPage = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [period, setPeriod] = useState('monthly');
 
+  // Discounts state
+  const [discounts, setDiscounts] = useState([]);
+  const [discountsLoading, setDiscountsLoading] = useState(true);
+
   // Sales History Modal
   const [isSalesHistoryOpen, setIsSalesHistoryOpen] = useState(false);
   const [salesHistoryUser, setSalesHistoryUser] = useState(null);
@@ -51,7 +55,25 @@ export const UsersPage = () => {
 
   useEffect(() => {
     fetchUsers();
+    fetchDiscounts();
   }, [period]);
+
+  const fetchDiscounts = async () => {
+    try {
+      setDiscountsLoading(true);
+      const token = localStorage.getItem('token') || localStorage.getItem('auth_token');
+      const response = await api.get('/users/discounts/all', {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      if (response.data?.success) {
+        setDiscounts(response.data.data);
+      }
+    } catch (error) {
+      console.error("Chegirmalarni yuklashda xatolik:", error);
+    } finally {
+      setDiscountsLoading(false);
+    }
+  };
 
   const fetchSalesHistory = async (userId, p) => {
     try {
@@ -347,6 +369,98 @@ export const UsersPage = () => {
             </div>
           ))
         )}
+      </div>
+
+      {/* Berilgan chegirmalar (Diskontlar) */}
+      <div className="mt-8">
+        <h2 className="text-xl sm:text-2xl font-bold text-slate-900 dark:text-white tracking-wide mb-4">Berilgan chegirmalar (Diskontlar)</h2>
+        
+        {/* Desktop Table */}
+        <div className="hidden md:block glass-panel p-4 sm:p-6 rounded-2xl border border-slate-200 dark:border-white/5 overflow-hidden">
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm text-left">
+              <thead className="text-xs text-slate-500 dark:text-gray-400 uppercase bg-slate-100/50 dark:bg-slate-900/40  border-b border-slate-200 dark:border-white/5">
+                <tr>
+                  <th className="px-4 py-3 font-semibold rounded-tl-xl">Do'kon nomi</th>
+                  <th className="px-4 py-3 font-semibold">Chegirma summasi</th>
+                  <th className="px-4 py-3 font-semibold">Kim berdi</th>
+                  <th className="px-4 py-3 font-semibold">Qachon</th>
+                  <th className="px-4 py-3 font-semibold">Turi</th>
+                  <th className="px-4 py-3 font-semibold text-right rounded-tr-xl">Umumiy summa</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-slate-200 dark:divide-white/5">
+                {discountsLoading ? (
+                  <tr>
+                    <td colSpan="6" className="px-4 py-8 text-center text-slate-500 dark:text-gray-400 animate-pulse">
+                      Yuklanmoqda...
+                    </td>
+                  </tr>
+                ) : discounts.length === 0 ? (
+                  <tr>
+                    <td colSpan="6" className="px-4 py-8 text-center text-slate-500 dark:text-gray-400">
+                      Chegirmalar topilmadi
+                    </td>
+                  </tr>
+                ) : (
+                  discounts.map((d) => (
+                    <tr key={d.id} className="hover:bg-white/[0.02] transition">
+                      <td className="px-4 py-3 font-bold text-slate-900 dark:text-white">🏬 {d.storeName}</td>
+                      <td className="px-4 py-3 font-bold text-brand-500">🎁 -{formatMoney(d.amount)}</td>
+                      <td className="px-4 py-3">
+                        <div className="font-medium text-slate-900 dark:text-white">👤 {d.giverName} {d.giverUsername && `(@${d.giverUsername})`}</div>
+                        <div className="text-xs text-slate-500 dark:text-gray-500">{d.giverRole}</div>
+                      </td>
+                      <td className="px-4 py-3 text-slate-700 dark:text-gray-300">📅 {formatDate(d.date)}, {new Date(d.date).toLocaleTimeString('uz-UZ', {hour: '2-digit', minute: '2-digit'})}</td>
+                      <td className="px-4 py-3 text-slate-700 dark:text-gray-300">{d.type}</td>
+                      <td className="px-4 py-3 text-right text-slate-700 dark:text-gray-300 font-mono">{d.totalInfo}</td>
+                    </tr>
+                  ))
+                )}
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        {/* Mobile Cards */}
+        <div className="md:hidden space-y-3 mt-3">
+          {discountsLoading ? (
+            <div className="text-center text-slate-500 dark:text-gray-400 py-8 animate-pulse">Yuklanmoqda...</div>
+          ) : discounts.length === 0 ? (
+            <div className="text-center text-slate-500 dark:text-gray-400 py-8">Chegirmalar topilmadi</div>
+          ) : (
+            discounts.map((d) => (
+              <div key={d.id} className="bg-white dark:bg-slate-900/90 border border-slate-200 dark:border-slate-800 rounded-2xl p-4 space-y-2 mb-3">
+                <div className="flex justify-between items-start gap-2">
+                  <div className="font-bold text-slate-900 dark:text-white text-base">🏬 {d.storeName}</div>
+                  <div className="px-2 py-1 bg-brand-500/20 text-brand-500 dark:text-brand-400 rounded-lg text-xs font-bold whitespace-nowrap">
+                    🎁 -{formatMoney(d.amount)}
+                  </div>
+                </div>
+                
+                <div className="bg-slate-50 dark:bg-slate-800/50 rounded-xl p-3 space-y-2 text-sm border border-slate-100 dark:border-slate-700/50">
+                  <div className="flex justify-between items-center">
+                    <span className="text-slate-500 dark:text-gray-400 text-xs">Kim berdi:</span>
+                    <span className="font-medium text-slate-900 dark:text-white">👤 {d.giverName} <span className="text-[10px] text-slate-500 dark:text-gray-500">({d.giverRole})</span></span>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <span className="text-slate-500 dark:text-gray-400 text-xs">Qachon:</span>
+                    <span className="text-slate-700 dark:text-gray-300">📅 {formatDate(d.date)}, {new Date(d.date).toLocaleTimeString('uz-UZ', {hour: '2-digit', minute: '2-digit'})}</span>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <span className="text-slate-500 dark:text-gray-400 text-xs">Turi:</span>
+                    <span className="text-slate-700 dark:text-gray-300">{d.type}</span>
+                  </div>
+                </div>
+
+                <div className="pt-1 text-right text-sm">
+                  <span className="text-slate-500 dark:text-gray-400 mr-2">{d.totalInfo.split(':')[0]}:</span>
+                  <span className="font-bold text-slate-900 dark:text-white">{d.totalInfo.split(':')[1]}</span>
+                </div>
+              </div>
+            ))
+          )}
+        </div>
       </div>
 
       {/* Create/Edit User Modal */}

@@ -20,6 +20,10 @@ export const AnalyticsPage = () => {
   const [isSoldProductsModalOpen, setIsSoldProductsModalOpen] = useState(false);
   const [purchases, setPurchases] = useState([]);
   const [loadingPurchases, setLoadingPurchases] = useState(false);
+  const [isPurchasePaymentModalOpen, setIsPurchasePaymentModalOpen] = useState(false);
+  const [selectedPurchaseForPayment, setSelectedPurchaseForPayment] = useState(null);
+  const [purchasePaymentAmount, setPurchasePaymentAmount] = useState('');
+  const [isSubmittingPurchasePayment, setIsSubmittingPurchasePayment] = useState(false);
   const isBoss = (localStorage.getItem('role') || '').toUpperCase() === 'BOSS';
 
   const handleUpdateBalanceSubmit = async (e) => {
@@ -38,8 +42,40 @@ export const AnalyticsPage = () => {
       toast.error(err.response?.data?.message || 'Xatolik yuz berdi');
     }
   };
+  const handlePurchasePaymentSubmit = async (e) => {
+    e.preventDefault();
+    if (!selectedPurchaseForPayment) return;
+    const rawAmount = parseNumberFromSpaces(purchasePaymentAmount);
+    if (!rawAmount || rawAmount <= 0) {
+      toast.error('Iltimos, to\'g\'ri summa kiriting');
+      return;
+    }
+    
+    const remainingDebt = Number(selectedPurchaseForPayment.totalCost) - Number(selectedPurchaseForPayment.paidAmount || 0);
+    if (rawAmount > remainingDebt) {
+      toast.error('Kiritilgan summa qoldiq qarzdan ko\'p bo\'lishi mumkin emas');
+      return;
+    }
 
+    setIsSubmittingPurchasePayment(true);
+    try {
+      await api.post(`/products/purchases/${selectedPurchaseForPayment.id}/pay`, { amount: rawAmount });
+      toast.success('Qarz to\'lovi muvaffaqiyatli saqlandi');
+      setIsPurchasePaymentModalOpen(false);
+      fetchPurchases();
+      fetchReport(true);
+    } catch (err) {
+      toast.error(err.response?.data?.message || 'Xatolik yuz berdi');
+    } finally {
+      setIsSubmittingPurchasePayment(false);
+    }
+  };
 
+  const openPurchasePaymentModal = (hist) => {
+    setSelectedPurchaseForPayment(hist);
+    setPurchasePaymentAmount('');
+    setIsPurchasePaymentModalOpen(true);
+  };
 
   useEffect(() => {
     fetchReport();
@@ -76,7 +112,7 @@ export const AnalyticsPage = () => {
     if (!silent) setLoading(true);
     if (!silent) setError(null);
     try {
-      const response = await api.get('/reports/sales', {
+      const response = await api.get('/analytics', {
         params: { period, _t: Date.now() },
       });
       setReport(response.data.data.report);
@@ -567,49 +603,49 @@ export const AnalyticsPage = () => {
 
       {/* Expenses History Modal */}
       {isExpensesHistoryModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm overflow-y-auto">
-          <div className="glass-panel border-slate-200 dark:border-white/10 max-w-2xl w-full rounded-3xl p-6 relative my-auto shadow-2xl shadow-red-900/20 border-t-red-500/20">
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm animate-fade-in overflow-y-auto">
+          <div className="glass-panel border border-slate-200 dark:border-white/10 w-full sm:max-w-2xl md:max-w-2xl rounded-2xl shadow-2xl p-4 sm:p-6 my-auto max-h-[90vh] flex flex-col relative overflow-hidden animate-slide-up">
             <button
               onClick={() => setIsExpensesHistoryModalOpen(false)}
-              className="absolute top-4 right-4 text-slate-500 dark:text-gray-400 hover:text-slate-900 dark:text-white transition bg-white/5 p-2 rounded-xl hover:bg-slate-200 dark:hover:bg-white/10 cursor-pointer"
+              className="absolute top-3 right-3 sm:top-4 sm:right-4 text-slate-500 dark:text-gray-400 hover:text-slate-900 dark:text-white transition bg-slate-800/60 p-2 rounded-xl hover:bg-slate-700 active:scale-95 cursor-pointer z-10"
             >
               <X size={20} />
             </button>
             <div className="flex items-center space-x-3 mb-6">
-              <div className="bg-red-500/20 p-2.5 rounded-xl text-red-400">
+              <div className="bg-red-500/20 w-10 h-10 min-w-[40px] rounded-xl flex items-center justify-center text-red-400 shrink-0">
                 <AlertTriangle size={24} />
               </div>
               <div>
-                <h3 className="text-xl font-bold text-slate-900 dark:text-white tracking-tight">Boshqa xarajatlar tarixi</h3>
+                <h3 className="text-base sm:text-lg font-bold text-slate-900 dark:text-white leading-tight line-clamp-2">Boshqa xarajatlar tarixi</h3>
                 <p className="text-xs text-slate-500 dark:text-gray-400 mt-0.5">{getPeriodLabel()} ({report?.expensesList?.length || 0} ta yozuv)</p>
               </div>
             </div>
             
-            <div className="bg-slate-50/50 dark:bg-slate-950/50 rounded-2xl border border-slate-200 dark:border-white/5 overflow-hidden max-h-[60vh] overflow-y-auto">
+            <div className="bg-slate-50/50 dark:bg-slate-950/50 rounded-2xl border border-slate-200 dark:border-white/5 overflow-x-auto w-full no-scrollbar flex-1 overflow-y-auto max-h-[70vh]">
               <table className="w-full text-left border-collapse text-xs sm:text-sm">
                 <thead>
                   <tr className="bg-white/80 dark:bg-slate-900/80 text-slate-500 dark:text-gray-400 uppercase tracking-wider font-semibold border-b border-slate-200 dark:border-white/5 sticky top-0 backdrop-blur-md">
-                    <th className="p-4">Sana / Vaqt</th>
-                    <th className="p-4">Izoh</th>
-                    <th className="p-4 text-right">Summa</th>
+                    <th className="min-w-[100px] whitespace-nowrap text-[10px] sm:text-xs py-2.5 px-3">Sana / Vaqt</th>
+                    <th className="min-w-[100px] whitespace-nowrap text-[10px] sm:text-xs py-2.5 px-3">Izoh</th>
+                    <th className="min-w-[100px] whitespace-nowrap text-[10px] sm:text-xs py-2.5 px-3 text-right">Summa</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-200 dark:divide-white/5">
                   {!report?.expensesList || report.expensesList.length === 0 ? (
                     <tr>
-                      <td colSpan="3" className="p-8 text-center text-slate-500 dark:text-gray-500">Bu davrda boshqa xarajatlar mavjud emas.</td>
+                      <td colSpan="3" className="py-8 px-4 text-center text-xs sm:text-sm text-slate-400 whitespace-normal">Bu davrda boshqa xarajatlar mavjud emas.</td>
                     </tr>
                   ) : (
                     report.expensesList.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt)).map((expense, idx) => (
                       <tr key={expense.id || idx} className="hover:bg-white/[0.02] transition">
-                        <td className="p-4 text-slate-700 dark:text-gray-300 font-mono flex items-center space-x-2 whitespace-nowrap">
+                        <td className="min-w-[100px] whitespace-nowrap text-xs sm:text-sm py-2.5 px-3 text-slate-700 dark:text-gray-300 font-mono flex items-center space-x-2 whitespace-nowrap">
                           <Clock size={14} className="text-slate-500 dark:text-gray-500" />
                           <span>{new Date(expense.createdAt).toLocaleString('ru-RU')}</span>
                         </td>
-                        <td className="p-4 text-slate-900 dark:text-white font-medium break-words max-w-[200px]">
+                        <td className="min-w-[100px] whitespace-nowrap text-xs sm:text-sm py-2.5 px-3 text-slate-900 dark:text-white font-medium break-words max-w-[200px]">
                           {expense.description}
                         </td>
-                        <td className="p-4 text-right text-red-400 font-black tracking-tight whitespace-nowrap">
+                        <td className="min-w-[100px] whitespace-nowrap text-xs sm:text-sm py-2.5 px-3 text-right text-red-400 font-black tracking-tight whitespace-nowrap">
                           {formatCurrency(expense.amount)}
                         </td>
                       </tr>
@@ -624,49 +660,73 @@ export const AnalyticsPage = () => {
 
       {/* Purchase History Modal */}
       {isPurchaseHistoryModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm overflow-y-auto">
-          <div className="glass-panel border-slate-200 dark:border-white/10 max-w-4xl w-full rounded-3xl p-6 relative my-auto shadow-2xl shadow-orange-900/20 border-t-orange-500/20">
-            <button onClick={() => setIsPurchaseHistoryModalOpen(false)} className="absolute top-4 right-4 text-slate-500 dark:text-gray-400 hover:text-slate-900 dark:text-white transition bg-white/5 p-2 rounded-xl hover:bg-slate-200 dark:hover:bg-white/10 cursor-pointer">
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm animate-fade-in overflow-y-auto">
+          <div className="glass-panel border border-slate-200 dark:border-white/10 w-full sm:max-w-4xl md:max-w-2xl rounded-2xl shadow-2xl p-4 sm:p-6 my-auto max-h-[90vh] flex flex-col relative overflow-hidden animate-slide-up">
+            <button onClick={() => setIsPurchaseHistoryModalOpen(false)} className="absolute top-3 right-3 sm:top-4 sm:right-4 text-slate-500 dark:text-gray-400 hover:text-slate-900 dark:text-white transition bg-slate-800/60 p-2 rounded-xl hover:bg-slate-700 active:scale-95 cursor-pointer z-10">
               <X size={20} />
             </button>
             <div className="flex items-center space-x-3 mb-6">
-              <div className="bg-orange-500/20 p-2.5 rounded-xl text-orange-400"><DollarSign size={24} className="rotate-180" /></div>
+              <div className="bg-orange-500/20 w-10 h-10 min-w-[40px] rounded-xl flex items-center justify-center text-orange-400 shrink-0"><DollarSign size={24} className="rotate-180" /></div>
               <div>
-                <h3 className="text-xl font-bold text-slate-900 dark:text-white tracking-tight">Omborga qilingan tovar xaridlari</h3>
+                <h3 className="text-base sm:text-lg font-bold text-slate-900 dark:text-white leading-tight line-clamp-2">Omborga qilingan tovar xaridlari</h3>
                 <p className="text-xs text-slate-500 dark:text-gray-400 mt-0.5">{getPeriodLabel()} ({purchases?.length || 0} ta yozuv)</p>
               </div>
             </div>
-            <div className="bg-slate-50/50 dark:bg-slate-950/50 rounded-2xl border border-slate-200 dark:border-white/5 overflow-hidden max-h-[60vh] overflow-y-auto">
+            <div className="bg-slate-50/50 dark:bg-slate-950/50 rounded-2xl border border-slate-200 dark:border-white/5 overflow-x-auto w-full no-scrollbar flex-1 overflow-y-auto max-h-[70vh]">
               <table className="w-full text-left border-collapse text-xs sm:text-sm">
                 <thead>
                   <tr className="bg-white/80 dark:bg-slate-900/80 text-slate-500 dark:text-gray-400 uppercase tracking-wider font-semibold border-b border-slate-200 dark:border-white/5 sticky top-0 backdrop-blur-md">
-                    <th className="p-4">Sana</th>
-                    <th className="p-4">Mahsulot</th>
-                    <th className="p-4 text-center">Miqdor</th>
-                    <th className="p-4 text-right">Tannarx (dona / quti)</th>
-                    <th className="p-4 text-right">Jami Summa</th>
+                    <th className="min-w-[100px] whitespace-nowrap text-[10px] sm:text-xs py-2.5 px-3">Sana</th>
+                    <th className="min-w-[100px] whitespace-nowrap text-[10px] sm:text-xs py-2.5 px-3">Mahsulot</th>
+                    <th className="min-w-[100px] whitespace-nowrap text-[10px] sm:text-xs py-2.5 px-3">Holati</th>
+                    <th className="min-w-[100px] whitespace-nowrap text-[10px] sm:text-xs py-2.5 px-3 text-center">Miqdor</th>
+                    <th className="min-w-[100px] whitespace-nowrap text-[10px] sm:text-xs py-2.5 px-3 text-right">Tannarx (dona / quti)</th>
+                    <th className="min-w-[100px] whitespace-nowrap text-[10px] sm:text-xs py-2.5 px-3 text-right">Jami Summa</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-200 dark:divide-white/5">
                   {loadingPurchases ? (
-                    <tr><td colSpan="5" className="p-8 text-center text-slate-500 dark:text-gray-500">Yuklanmoqda...</td></tr>
+                    <tr><td colSpan="6" className="py-8 px-4 text-center text-xs sm:text-sm text-slate-400 whitespace-normal">Yuklanmoqda...</td></tr>
                   ) : !purchases || purchases.length === 0 ? (
-                    <tr><td colSpan="5" className="p-8 text-center text-slate-500 dark:text-gray-500">Bu davrda tovar xaridlari mavjud emas.</td></tr>
+                    <tr><td colSpan="6" className="py-8 px-4 text-center text-xs sm:text-sm text-slate-400 whitespace-normal">Bu davrda tovar xaridlari mavjud emas.</td></tr>
                   ) : (
                     purchases.map((hist, idx) => (
                       <tr key={hist.id || idx} className="hover:bg-white/[0.02] transition">
-                        <td className="p-4 text-slate-700 dark:text-gray-300 font-mono whitespace-nowrap"><Clock size={14} className="inline mr-2 text-slate-500 dark:text-gray-500" />{new Date(hist.createdAt).toLocaleString('ru-RU')}</td>
-                        <td className="p-4 text-slate-900 dark:text-white font-medium">{hist.product?.name || 'Noma\'lum'}</td>
-                        <td className="p-4 text-center text-slate-700 dark:text-gray-300">
+                        <td className="min-w-[100px] whitespace-nowrap text-xs sm:text-sm py-2.5 px-3 text-slate-700 dark:text-gray-300 font-mono whitespace-nowrap"><Clock size={14} className="inline mr-2 text-slate-500 dark:text-gray-500" />{new Date(hist.createdAt).toLocaleString('ru-RU')}</td>
+                        <td className="min-w-[100px] whitespace-nowrap text-xs sm:text-sm py-2.5 px-3 text-slate-900 dark:text-white font-medium">{hist.product?.name || 'Noma\'lum'}</td>
+                        <td className="min-w-[100px] whitespace-nowrap text-xs sm:text-sm py-2.5 px-3">
+                          {hist.paymentType === 'DEBT' ? (
+                            <div className="inline-flex flex-col items-start">
+                              <span className="px-2 py-0.5 bg-amber-500/10 text-amber-500 border border-amber-500/20 rounded-md text-[10px] font-bold">Nasiyaga</span>
+                              <span className="text-[10px] text-slate-500 dark:text-gray-400 mt-0.5">{hist.supplierName || 'Ta\'minotchi'}</span>
+                            </div>
+                          ) : (
+                            <span className="px-2 py-0.5 bg-brand-500/10 text-brand-500 border border-brand-500/20 rounded-md text-[10px] font-bold">Naqd</span>
+                          )}
+                        </td>
+                        <td className="min-w-[100px] whitespace-nowrap text-xs sm:text-sm py-2.5 px-3 text-center text-slate-700 dark:text-gray-300">
                           {hist.addedBoxes > 0 && `${hist.addedBoxes} quti`}
                           {hist.addedBoxes > 0 && hist.addedPieces > 0 && ' + '}
                           {hist.addedPieces > 0 && `${hist.addedPieces} dona`}
                         </td>
-                        <td className="p-4 text-right text-slate-500 dark:text-gray-400 font-mono text-[11px]">
+                        <td className="min-w-[100px] whitespace-nowrap text-xs sm:text-sm py-2.5 px-3 text-right text-slate-500 dark:text-gray-400 font-mono text-[11px]">
                           {hist.addedPieces > 0 && <div>D: {formatCurrency(hist.pieceCostPrice)}</div>}
                           {hist.addedBoxes > 0 && <div>Q: {formatCurrency(hist.boxCostPrice)}</div>}
                         </td>
-                        <td className="p-4 text-right text-orange-400 font-black tracking-tight whitespace-nowrap">{formatCurrency(hist.totalCost)}</td>
+                        <td className="min-w-[120px] whitespace-nowrap text-xs sm:text-sm py-2.5 px-3 text-right text-orange-400 font-black tracking-tight whitespace-nowrap">
+                          <div>{formatCurrency(hist.totalCost)}</div>
+                          {hist.paymentType === 'DEBT' && (Number(hist.totalCost) - Number(hist.paidAmount || 0) > 0) && (
+                            <div className="flex flex-col items-end mt-1 space-y-1">
+                              <span className="text-[10px] text-red-400 font-bold bg-red-400/10 px-1.5 py-0.5 rounded">Qarz: {formatCurrency(Number(hist.totalCost) - Number(hist.paidAmount || 0))}</span>
+                              <button onClick={() => openPurchasePaymentModal(hist)} className="bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-500 border border-emerald-500/30 px-2 py-1 rounded flex items-center text-[10px] transition font-bold active:scale-95">
+                                <Wallet size={12} className="mr-1" /> To'lash
+                              </button>
+                            </div>
+                          )}
+                          {hist.paymentType === 'DEBT' && (Number(hist.totalCost) - Number(hist.paidAmount || 0) <= 0) && (
+                            <div className="text-[10px] text-emerald-500 mt-1 font-bold bg-emerald-500/10 px-1.5 py-0.5 rounded inline-block">To'liq to'langan</div>
+                          )}
+                        </td>
                       </tr>
                     ))
                   )}
@@ -679,41 +739,41 @@ export const AnalyticsPage = () => {
 
       {/* Profit Details Modal */}
       {isProfitDetailsModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm overflow-y-auto">
-          <div className="glass-panel border-slate-200 dark:border-white/10 max-w-4xl w-full rounded-3xl p-6 relative my-auto shadow-2xl shadow-emerald-900/20 border-t-emerald-500/20">
-            <button onClick={() => setIsProfitDetailsModalOpen(false)} className="absolute top-4 right-4 text-slate-500 dark:text-gray-400 hover:text-slate-900 dark:text-white transition bg-white/5 p-2 rounded-xl hover:bg-slate-200 dark:hover:bg-white/10 cursor-pointer"><X size={20} /></button>
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm animate-fade-in overflow-y-auto">
+          <div className="glass-panel border border-slate-200 dark:border-white/10 w-full sm:max-w-4xl md:max-w-2xl rounded-2xl shadow-2xl p-4 sm:p-6 my-auto max-h-[90vh] flex flex-col relative overflow-hidden animate-slide-up">
+            <button onClick={() => setIsProfitDetailsModalOpen(false)} className="absolute top-3 right-3 sm:top-4 sm:right-4 text-slate-500 dark:text-gray-400 hover:text-slate-900 dark:text-white transition bg-slate-800/60 p-2 rounded-xl hover:bg-slate-700 active:scale-95 cursor-pointer z-10"><X size={20} /></button>
             <div className="flex items-center space-x-3 mb-6">
-              <div className="bg-emerald-500/20 p-2.5 rounded-xl text-emerald-400"><TrendingUp size={24} /></div>
+              <div className="bg-emerald-500/20 w-10 h-10 min-w-[40px] rounded-xl flex items-center justify-center text-emerald-400 shrink-0"><TrendingUp size={24} /></div>
               <div>
-                <h3 className="text-xl font-bold text-slate-900 dark:text-white tracking-tight">Mahsulotlar kesimida sof foyda</h3>
+                <h3 className="text-base sm:text-lg font-bold text-slate-900 dark:text-white leading-tight line-clamp-2">Mahsulotlar kesimida sof foyda</h3>
                 <p className="text-xs text-slate-500 dark:text-gray-400 mt-0.5">{getPeriodLabel()}</p>
               </div>
             </div>
-            <div className="bg-slate-50/50 dark:bg-slate-950/50 rounded-2xl border border-slate-200 dark:border-white/5 overflow-hidden max-h-[60vh] overflow-y-auto">
+            <div className="bg-slate-50/50 dark:bg-slate-950/50 rounded-2xl border border-slate-200 dark:border-white/5 overflow-x-auto w-full no-scrollbar flex-1 overflow-y-auto max-h-[70vh]">
               <table className="w-full text-left border-collapse text-xs sm:text-sm">
                 <thead>
                   <tr className="bg-white/80 dark:bg-slate-900/80 text-slate-500 dark:text-gray-400 uppercase tracking-wider font-semibold border-b border-slate-200 dark:border-white/5 sticky top-0 backdrop-blur-md">
-                    <th className="p-4">Mahsulot Nomi</th>
-                    <th className="p-4 text-center">Sotilgan Hajm</th>
-                    <th className="p-4 text-right">Tannarx (Xarajat)</th>
-                    <th className="p-4 text-right">Sotuv Summasi</th>
-                    <th className="p-4 text-right">Sof Foyda</th>
+                    <th className="min-w-[100px] whitespace-nowrap text-[10px] sm:text-xs py-2.5 px-3">Mahsulot Nomi</th>
+                    <th className="min-w-[100px] whitespace-nowrap text-[10px] sm:text-xs py-2.5 px-3 text-center">Sotilgan Hajm</th>
+                    <th className="min-w-[100px] whitespace-nowrap text-[10px] sm:text-xs py-2.5 px-3 text-right">Tannarx (Xarajat)</th>
+                    <th className="min-w-[100px] whitespace-nowrap text-[10px] sm:text-xs py-2.5 px-3 text-right">Sotuv Summasi</th>
+                    <th className="min-w-[100px] whitespace-nowrap text-[10px] sm:text-xs py-2.5 px-3 text-right">Sof Foyda</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-200 dark:divide-white/5">
                   {!report?.productProfitList || report.productProfitList.length === 0 ? (
-                    <tr><td colSpan="5" className="p-8 text-center text-slate-500 dark:text-gray-500">Hech qanday savdo mavjud emas.</td></tr>
+                    <tr><td colSpan="5" className="py-8 px-4 text-center text-xs sm:text-sm text-slate-400 whitespace-normal">Hech qanday savdo mavjud emas.</td></tr>
                   ) : (
                     report.productProfitList.map((p, idx) => (
                       <tr key={p.id} className="hover:bg-white/[0.02] transition">
-                        <td className="p-4 text-slate-900 dark:text-white font-medium">{p.name}</td>
-                        <td className="p-4 text-center text-slate-700 dark:text-gray-300">
+                        <td className="min-w-[100px] whitespace-nowrap text-xs sm:text-sm py-2.5 px-3 text-slate-900 dark:text-white font-medium">{p.name}</td>
+                        <td className="min-w-[100px] whitespace-nowrap text-xs sm:text-sm py-2.5 px-3 text-center text-slate-700 dark:text-gray-300">
                           {p.boxesSold > 0 && `${p.boxesSold} quti`}
                           {p.boxesSold > 0 && p.piecesSold > 0 && ' + '}
                           {p.piecesSold > 0 && `${p.piecesSold} dona`}
                         </td>
-                        <td className="p-4 text-right text-orange-400/80 font-mono">{formatCurrency(p.totalCost)}</td>
-                        <td className="p-4 text-right text-blue-400/80 font-mono">{formatCurrency(p.totalSalesValue)}</td>
+                        <td className="min-w-[100px] whitespace-nowrap text-xs sm:text-sm py-2.5 px-3 text-right text-orange-400/80 font-mono">{formatCurrency(p.totalCost)}</td>
+                        <td className="min-w-[100px] whitespace-nowrap text-xs sm:text-sm py-2.5 px-3 text-right text-blue-400/80 font-mono">{formatCurrency(p.totalSalesValue)}</td>
                         <td className={`p-4 text-right font-black tracking-tight whitespace-nowrap ${p.netProfit >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>
                           {p.netProfit >= 0 ? '+' : ''}{formatCurrency(p.netProfit)}
                         </td>
@@ -729,38 +789,38 @@ export const AnalyticsPage = () => {
 
       {/* Sales History Modal */}
       {isSalesHistoryModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm overflow-y-auto">
-          <div className="glass-panel border-slate-200 dark:border-white/10 max-w-4xl w-full rounded-3xl p-6 relative my-auto shadow-2xl shadow-brand-900/20 border-t-brand-500/20">
-            <button onClick={() => setIsSalesHistoryModalOpen(false)} className="absolute top-4 right-4 text-slate-500 dark:text-gray-400 hover:text-slate-900 dark:text-white transition bg-white/5 p-2 rounded-xl hover:bg-slate-200 dark:hover:bg-white/10 cursor-pointer"><X size={20} /></button>
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm animate-fade-in overflow-y-auto">
+          <div className="glass-panel border border-slate-200 dark:border-white/10 w-full sm:max-w-4xl md:max-w-2xl rounded-2xl shadow-2xl p-4 sm:p-6 my-auto max-h-[90vh] flex flex-col relative overflow-hidden animate-slide-up">
+            <button onClick={() => setIsSalesHistoryModalOpen(false)} className="absolute top-3 right-3 sm:top-4 sm:right-4 text-slate-500 dark:text-gray-400 hover:text-slate-900 dark:text-white transition bg-slate-800/60 p-2 rounded-xl hover:bg-slate-700 active:scale-95 cursor-pointer z-10"><X size={20} /></button>
             <div className="flex items-center space-x-3 mb-6">
-              <div className="bg-brand-500/20 p-2.5 rounded-xl text-brand-400"><TrendingUp size={24} /></div>
+              <div className="bg-brand-500/20 w-10 h-10 min-w-[40px] rounded-xl flex items-center justify-center text-brand-400 shrink-0"><TrendingUp size={24} /></div>
               <div>
-                <h3 className="text-xl font-bold text-slate-900 dark:text-white tracking-tight">Barcha Savdolar Tarixi</h3>
+                <h3 className="text-base sm:text-lg font-bold text-slate-900 dark:text-white leading-tight line-clamp-2">Barcha Savdolar Tarixi</h3>
                 <p className="text-xs text-slate-500 dark:text-gray-400 mt-0.5">{getPeriodLabel()} ({report?.salesHistory?.length || 0} ta savdo)</p>
               </div>
             </div>
-            <div className="bg-slate-50/50 dark:bg-slate-950/50 rounded-2xl border border-slate-200 dark:border-white/5 overflow-hidden max-h-[60vh] overflow-y-auto">
+            <div className="bg-slate-50/50 dark:bg-slate-950/50 rounded-2xl border border-slate-200 dark:border-white/5 overflow-x-auto w-full no-scrollbar flex-1 overflow-y-auto max-h-[70vh]">
               <table className="w-full text-left border-collapse text-xs sm:text-sm">
                 <thead>
                   <tr className="bg-white/80 dark:bg-slate-900/80 text-slate-500 dark:text-gray-400 uppercase tracking-wider font-semibold border-b border-slate-200 dark:border-white/5 sticky top-0 backdrop-blur-md">
-                    <th className="p-4">Sana</th>
-                    <th className="p-4">Do'kon / Mijoz</th>
-                    <th className="p-4 text-right">Umumiy Summa</th>
-                    <th className="p-4 text-right">To'langan (Naqd)</th>
-                    <th className="p-4 text-right">Nasiya (Qarz)</th>
+                    <th className="min-w-[100px] whitespace-nowrap text-[10px] sm:text-xs py-2.5 px-3">Sana</th>
+                    <th className="min-w-[100px] whitespace-nowrap text-[10px] sm:text-xs py-2.5 px-3">Do'kon / Mijoz</th>
+                    <th className="min-w-[100px] whitespace-nowrap text-[10px] sm:text-xs py-2.5 px-3 text-right">Umumiy Summa</th>
+                    <th className="min-w-[100px] whitespace-nowrap text-[10px] sm:text-xs py-2.5 px-3 text-right">To'langan (Naqd)</th>
+                    <th className="min-w-[100px] whitespace-nowrap text-[10px] sm:text-xs py-2.5 px-3 text-right">Nasiya (Qarz)</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-200 dark:divide-white/5">
                   {!report?.salesHistory || report.salesHistory.length === 0 ? (
-                    <tr><td colSpan="5" className="p-8 text-center text-slate-500 dark:text-gray-500">Bu davrda savdolar mavjud emas.</td></tr>
+                    <tr><td colSpan="5" className="py-8 px-4 text-center text-xs sm:text-sm text-slate-400 whitespace-normal">Bu davrda savdolar mavjud emas.</td></tr>
                   ) : (
                     report.salesHistory.map((order, idx) => (
                       <tr key={order.id} className="hover:bg-white/[0.02] transition">
-                        <td className="p-4 text-slate-700 dark:text-gray-300 font-mono whitespace-nowrap"><Clock size={14} className="inline mr-2 text-slate-500 dark:text-gray-500" />{new Date(order.createdAt).toLocaleString('ru-RU')}</td>
-                        <td className="p-4 text-slate-900 dark:text-white font-medium">{order.store?.name || 'Noma\'lum'}</td>
-                        <td className="p-4 text-right text-slate-900 dark:text-white font-bold">{formatCurrency(order.totalAmount)}</td>
-                        <td className="p-4 text-right text-emerald-400 font-mono">{formatCurrency(Number(order.totalAmount) - Number(order.debtAmount))}</td>
-                        <td className="p-4 text-right text-red-400 font-mono">{formatCurrency(order.debtAmount)}</td>
+                        <td className="min-w-[100px] whitespace-nowrap text-xs sm:text-sm py-2.5 px-3 text-slate-700 dark:text-gray-300 font-mono whitespace-nowrap"><Clock size={14} className="inline mr-2 text-slate-500 dark:text-gray-500" />{new Date(order.createdAt).toLocaleString('ru-RU')}</td>
+                        <td className="min-w-[100px] whitespace-nowrap text-xs sm:text-sm py-2.5 px-3 text-slate-900 dark:text-white font-medium">{order.store?.name || 'Noma\'lum'}</td>
+                        <td className="min-w-[100px] whitespace-nowrap text-xs sm:text-sm py-2.5 px-3 text-right text-slate-900 dark:text-white font-bold">{formatCurrency(order.totalAmount)}</td>
+                        <td className="min-w-[100px] whitespace-nowrap text-xs sm:text-sm py-2.5 px-3 text-right text-emerald-400 font-mono">{formatCurrency(Number(order.totalAmount) - Number(order.debtAmount))}</td>
+                        <td className="min-w-[100px] whitespace-nowrap text-xs sm:text-sm py-2.5 px-3 text-right text-red-400 font-mono">{formatCurrency(order.debtAmount)}</td>
                       </tr>
                     ))
                   )}
@@ -773,36 +833,36 @@ export const AnalyticsPage = () => {
 
       {/* Cash Inflow Modal */}
       {isCashInflowModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm overflow-y-auto">
-          <div className="glass-panel border-slate-200 dark:border-white/10 max-w-4xl w-full rounded-3xl p-6 relative my-auto shadow-2xl shadow-emerald-900/20 border-t-emerald-500/20">
-            <button onClick={() => setIsCashInflowModalOpen(false)} className="absolute top-4 right-4 text-slate-500 dark:text-gray-400 hover:text-slate-900 dark:text-white transition bg-white/5 p-2 rounded-xl hover:bg-slate-200 dark:hover:bg-white/10 cursor-pointer"><X size={20} /></button>
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm animate-fade-in overflow-y-auto">
+          <div className="glass-panel border border-slate-200 dark:border-white/10 w-full sm:max-w-4xl md:max-w-2xl rounded-2xl shadow-2xl p-4 sm:p-6 my-auto max-h-[90vh] flex flex-col relative overflow-hidden animate-slide-up">
+            <button onClick={() => setIsCashInflowModalOpen(false)} className="absolute top-3 right-3 sm:top-4 sm:right-4 text-slate-500 dark:text-gray-400 hover:text-slate-900 dark:text-white transition bg-slate-800/60 p-2 rounded-xl hover:bg-slate-700 active:scale-95 cursor-pointer z-10"><X size={20} /></button>
             <div className="flex items-center space-x-3 mb-6">
-              <div className="bg-emerald-500/20 p-2.5 rounded-xl text-emerald-400"><DollarSign size={24} /></div>
+              <div className="bg-emerald-500/20 w-10 h-10 min-w-[40px] rounded-xl flex items-center justify-center text-emerald-400 shrink-0"><DollarSign size={24} /></div>
               <div>
-                <h3 className="text-xl font-bold text-slate-900 dark:text-white tracking-tight">Naqd Tushum Tarixi</h3>
+                <h3 className="text-base sm:text-lg font-bold text-slate-900 dark:text-white leading-tight line-clamp-2">Naqd Tushum Tarixi</h3>
                 <p className="text-xs text-slate-500 dark:text-gray-400 mt-0.5">{getPeriodLabel()} (Savdolardan olingan naqd to'lovlar)</p>
               </div>
             </div>
-            <div className="bg-slate-50/50 dark:bg-slate-950/50 rounded-2xl border border-slate-200 dark:border-white/5 overflow-hidden max-h-[60vh] overflow-y-auto">
+            <div className="bg-slate-50/50 dark:bg-slate-950/50 rounded-2xl border border-slate-200 dark:border-white/5 overflow-x-auto w-full no-scrollbar flex-1 overflow-y-auto max-h-[70vh]">
               <table className="w-full text-left border-collapse text-xs sm:text-sm">
                 <thead>
                   <tr className="bg-white/80 dark:bg-slate-900/80 text-slate-500 dark:text-gray-400 uppercase tracking-wider font-semibold border-b border-slate-200 dark:border-white/5 sticky top-0 backdrop-blur-md">
-                    <th className="p-4">Sana</th>
-                    <th className="p-4">Do'kon / Mijoz</th>
-                    <th className="p-4 text-right">Umumiy Chek</th>
-                    <th className="p-4 text-right">Tushgan Naqd</th>
+                    <th className="min-w-[100px] whitespace-nowrap text-[10px] sm:text-xs py-2.5 px-3">Sana</th>
+                    <th className="min-w-[100px] whitespace-nowrap text-[10px] sm:text-xs py-2.5 px-3">Do'kon / Mijoz</th>
+                    <th className="min-w-[100px] whitespace-nowrap text-[10px] sm:text-xs py-2.5 px-3 text-right">Umumiy Chek</th>
+                    <th className="min-w-[100px] whitespace-nowrap text-[10px] sm:text-xs py-2.5 px-3 text-right">Tushgan Naqd</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-200 dark:divide-white/5">
                   {!report?.salesHistory || report.salesHistory.filter(o => Number(o.totalAmount) - Number(o.debtAmount) > 0).length === 0 ? (
-                    <tr><td colSpan="4" className="p-8 text-center text-slate-500 dark:text-gray-500">Bu davrda naqd tushum mavjud emas.</td></tr>
+                    <tr><td colSpan="4" className="py-8 px-4 text-center text-xs sm:text-sm text-slate-400 whitespace-normal">Bu davrda naqd tushum mavjud emas.</td></tr>
                   ) : (
                     report.salesHistory.filter(o => Number(o.totalAmount) - Number(o.debtAmount) > 0).map((order) => (
                       <tr key={order.id} className="hover:bg-white/[0.02] transition">
-                        <td className="p-4 text-slate-700 dark:text-gray-300 font-mono whitespace-nowrap"><Clock size={14} className="inline mr-2 text-slate-500 dark:text-gray-500" />{new Date(order.createdAt).toLocaleString('ru-RU')}</td>
-                        <td className="p-4 text-slate-900 dark:text-white font-medium">{order.store?.name || 'Noma\'lum'}</td>
-                        <td className="p-4 text-right text-slate-500 dark:text-gray-400 font-mono">{formatCurrency(order.totalAmount)}</td>
-                        <td className="p-4 text-right text-emerald-400 font-black tracking-tight">{formatCurrency(Number(order.totalAmount) - Number(order.debtAmount))}</td>
+                        <td className="min-w-[100px] whitespace-nowrap text-xs sm:text-sm py-2.5 px-3 text-slate-700 dark:text-gray-300 font-mono whitespace-nowrap"><Clock size={14} className="inline mr-2 text-slate-500 dark:text-gray-500" />{new Date(order.createdAt).toLocaleString('ru-RU')}</td>
+                        <td className="min-w-[100px] whitespace-nowrap text-xs sm:text-sm py-2.5 px-3 text-slate-900 dark:text-white font-medium">{order.store?.name || 'Noma\'lum'}</td>
+                        <td className="min-w-[100px] whitespace-nowrap text-xs sm:text-sm py-2.5 px-3 text-right text-slate-500 dark:text-gray-400 font-mono">{formatCurrency(order.totalAmount)}</td>
+                        <td className="min-w-[100px] whitespace-nowrap text-xs sm:text-sm py-2.5 px-3 text-right text-emerald-400 font-black tracking-tight">{formatCurrency(Number(order.totalAmount) - Number(order.debtAmount))}</td>
                       </tr>
                     ))
                   )}
@@ -815,32 +875,32 @@ export const AnalyticsPage = () => {
 
       {/* Debt Stores Modal */}
       {isDebtStoresModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm overflow-y-auto">
-          <div className="glass-panel border-slate-200 dark:border-white/10 max-w-4xl w-full rounded-3xl p-6 relative my-auto shadow-2xl shadow-red-900/20 border-t-red-500/20">
-            <button onClick={() => setIsDebtStoresModalOpen(false)} className="absolute top-4 right-4 text-slate-500 dark:text-gray-400 hover:text-slate-900 dark:text-white transition bg-white/5 p-2 rounded-xl hover:bg-slate-200 dark:hover:bg-white/10 cursor-pointer"><X size={20} /></button>
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm animate-fade-in overflow-y-auto">
+          <div className="glass-panel border border-slate-200 dark:border-white/10 w-full sm:max-w-4xl md:max-w-2xl rounded-2xl shadow-2xl p-4 sm:p-6 my-auto max-h-[90vh] flex flex-col relative overflow-hidden animate-slide-up">
+            <button onClick={() => setIsDebtStoresModalOpen(false)} className="absolute top-3 right-3 sm:top-4 sm:right-4 text-slate-500 dark:text-gray-400 hover:text-slate-900 dark:text-white transition bg-slate-800/60 p-2 rounded-xl hover:bg-slate-700 active:scale-95 cursor-pointer z-10"><X size={20} /></button>
             <div className="flex items-center space-x-3 mb-6">
-              <div className="bg-red-500/20 p-2.5 rounded-xl text-red-400"><AlertTriangle size={24} /></div>
+              <div className="bg-red-500/20 w-10 h-10 min-w-[40px] rounded-xl flex items-center justify-center text-red-400 shrink-0"><AlertTriangle size={24} /></div>
               <div>
-                <h3 className="text-xl font-bold text-slate-900 dark:text-white tracking-tight">Qarzdor Do'konlar ro'yxati</h3>
+                <h3 className="text-base sm:text-lg font-bold text-slate-900 dark:text-white leading-tight line-clamp-2">Qarzdor Do'konlar ro'yxati</h3>
                 <p className="text-xs text-slate-500 dark:text-gray-400 mt-0.5">Joriy vaqtda haqiqatda qarzi bor do'konlar ({report?.debtStores?.length || 0} ta)</p>
               </div>
             </div>
-            <div className="bg-slate-50/50 dark:bg-slate-950/50 rounded-2xl border border-slate-200 dark:border-white/5 overflow-hidden max-h-[60vh] overflow-y-auto">
+            <div className="bg-slate-50/50 dark:bg-slate-950/50 rounded-2xl border border-slate-200 dark:border-white/5 overflow-x-auto w-full no-scrollbar flex-1 overflow-y-auto max-h-[70vh]">
               <table className="w-full text-left border-collapse text-xs sm:text-sm">
                 <thead>
                   <tr className="bg-white/80 dark:bg-slate-900/80 text-slate-500 dark:text-gray-400 uppercase tracking-wider font-semibold border-b border-slate-200 dark:border-white/5 sticky top-0 backdrop-blur-md">
-                    <th className="p-4">Do'kon / Mijoz Nomi</th>
-                    <th className="p-4 text-right">Umumiy Qarz (Nasiya)</th>
+                    <th className="min-w-[100px] whitespace-nowrap text-[10px] sm:text-xs py-2.5 px-3">Do'kon / Mijoz Nomi</th>
+                    <th className="min-w-[100px] whitespace-nowrap text-[10px] sm:text-xs py-2.5 px-3 text-right">Umumiy Qarz (Nasiya)</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-200 dark:divide-white/5">
                   {!report?.debtStores || report.debtStores.length === 0 ? (
-                    <tr><td colSpan="2" className="p-8 text-center text-emerald-500 font-bold">Ayni paytda qarzlar yo'q!</td></tr>
+                    <tr><td colSpan="2" className="py-8 px-4 text-center text-xs sm:text-sm text-emerald-500 font-bold whitespace-normal">Ayni paytda qarzlar yo'q!</td></tr>
                   ) : (
                     report.debtStores.map((store) => (
                       <tr key={store.id} className="hover:bg-white/[0.02] transition">
-                        <td className="p-4 text-slate-900 dark:text-white font-medium">{store.name} {store.ownerName ? `(${store.ownerName})` : ''}</td>
-                        <td className="p-4 text-right text-red-400 font-black tracking-tight">{formatCurrency(store.currentDebt)}</td>
+                        <td className="min-w-[100px] whitespace-nowrap text-xs sm:text-sm py-2.5 px-3 text-slate-900 dark:text-white font-medium">{store.name} {store.ownerName ? `(${store.ownerName})` : ''}</td>
+                        <td className="min-w-[100px] whitespace-nowrap text-xs sm:text-sm py-2.5 px-3 text-right text-red-400 font-black tracking-tight">{formatCurrency(store.currentDebt)}</td>
                       </tr>
                     ))
                   )}
@@ -853,36 +913,36 @@ export const AnalyticsPage = () => {
 
       {/* Sold Products Modal */}
       {isSoldProductsModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm overflow-y-auto">
-          <div className="glass-panel border-slate-200 dark:border-white/10 max-w-4xl w-full rounded-3xl p-6 relative my-auto shadow-2xl shadow-yellow-900/20 border-t-yellow-500/20">
-            <button onClick={() => setIsSoldProductsModalOpen(false)} className="absolute top-4 right-4 text-slate-500 dark:text-gray-400 hover:text-slate-900 dark:text-white transition bg-white/5 p-2 rounded-xl hover:bg-slate-200 dark:hover:bg-white/10 cursor-pointer"><X size={20} /></button>
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm animate-fade-in overflow-y-auto">
+          <div className="glass-panel border border-slate-200 dark:border-white/10 w-full sm:max-w-4xl md:max-w-2xl rounded-2xl shadow-2xl p-4 sm:p-6 my-auto max-h-[90vh] flex flex-col relative overflow-hidden animate-slide-up">
+            <button onClick={() => setIsSoldProductsModalOpen(false)} className="absolute top-3 right-3 sm:top-4 sm:right-4 text-slate-500 dark:text-gray-400 hover:text-slate-900 dark:text-white transition bg-slate-800/60 p-2 rounded-xl hover:bg-slate-700 active:scale-95 cursor-pointer z-10"><X size={20} /></button>
             <div className="flex items-center space-x-3 mb-6">
-              <div className="bg-yellow-500/20 p-2.5 rounded-xl text-yellow-400"><Box size={24} /></div>
+              <div className="bg-yellow-500/20 w-10 h-10 min-w-[40px] rounded-xl flex items-center justify-center text-yellow-400 shrink-0"><Box size={24} /></div>
               <div>
-                <h3 className="text-xl font-bold text-slate-900 dark:text-white tracking-tight">Sotilgan Mahsulotlar Statistikasi</h3>
+                <h3 className="text-base sm:text-lg font-bold text-slate-900 dark:text-white leading-tight line-clamp-2">Sotilgan Mahsulotlar Statistikasi</h3>
                 <p className="text-xs text-slate-500 dark:text-gray-400 mt-0.5">{getPeriodLabel()}</p>
               </div>
             </div>
-            <div className="bg-slate-50/50 dark:bg-slate-950/50 rounded-2xl border border-slate-200 dark:border-white/5 overflow-hidden max-h-[60vh] overflow-y-auto">
+            <div className="bg-slate-50/50 dark:bg-slate-950/50 rounded-2xl border border-slate-200 dark:border-white/5 overflow-x-auto w-full no-scrollbar flex-1 overflow-y-auto max-h-[70vh]">
               <table className="w-full text-left border-collapse text-xs sm:text-sm">
                 <thead>
                   <tr className="bg-white/80 dark:bg-slate-900/80 text-slate-500 dark:text-gray-400 uppercase tracking-wider font-semibold border-b border-slate-200 dark:border-white/5 sticky top-0 backdrop-blur-md">
-                    <th className="p-4">Mahsulot Nomi</th>
-                    <th className="p-4 text-center">Sotilgan Quti</th>
-                    <th className="p-4 text-center">Sotilgan Dona</th>
-                    <th className="p-4 text-right">Jami Summa</th>
+                    <th className="min-w-[100px] whitespace-nowrap text-[10px] sm:text-xs py-2.5 px-3">Mahsulot Nomi</th>
+                    <th className="min-w-[100px] whitespace-nowrap text-[10px] sm:text-xs py-2.5 px-3 text-center">Sotilgan Quti</th>
+                    <th className="min-w-[100px] whitespace-nowrap text-[10px] sm:text-xs py-2.5 px-3 text-center">Sotilgan Dona</th>
+                    <th className="min-w-[100px] whitespace-nowrap text-[10px] sm:text-xs py-2.5 px-3 text-right">Jami Summa</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-200 dark:divide-white/5">
                   {!report?.soldProductsList || report.soldProductsList.length === 0 ? (
-                    <tr><td colSpan="4" className="p-8 text-center text-slate-500 dark:text-gray-500">Bu davrda mahsulot sotilmagan.</td></tr>
+                    <tr><td colSpan="4" className="py-8 px-4 text-center text-xs sm:text-sm text-slate-400 whitespace-normal">Bu davrda mahsulot sotilmagan.</td></tr>
                   ) : (
                     report.soldProductsList.map((p) => (
                       <tr key={p.id} className="hover:bg-white/[0.02] transition">
-                        <td className="p-4 text-slate-900 dark:text-white font-medium">{p.name}</td>
-                        <td className="p-4 text-center text-brand-300 font-mono">{p.boxesSold}</td>
-                        <td className="p-4 text-center text-brand-300 font-mono">{p.piecesSold}</td>
-                        <td className="p-4 text-right text-slate-900 dark:text-white font-bold">{formatCurrency(p.totalSalesValue)}</td>
+                        <td className="min-w-[100px] whitespace-nowrap text-xs sm:text-sm py-2.5 px-3 text-slate-900 dark:text-white font-medium">{p.name}</td>
+                        <td className="min-w-[100px] whitespace-nowrap text-xs sm:text-sm py-2.5 px-3 text-center text-brand-300 font-mono">{p.boxesSold}</td>
+                        <td className="min-w-[100px] whitespace-nowrap text-xs sm:text-sm py-2.5 px-3 text-center text-brand-300 font-mono">{p.piecesSold}</td>
+                        <td className="min-w-[100px] whitespace-nowrap text-xs sm:text-sm py-2.5 px-3 text-right text-slate-900 dark:text-white font-bold">{formatCurrency(p.totalSalesValue)}</td>
                       </tr>
                     ))
                   )}
@@ -892,6 +952,66 @@ export const AnalyticsPage = () => {
           </div>
         </div>
       )}
+      {/* Purchase Debt Payment Modal */}
+      {isPurchasePaymentModalOpen && selectedPurchaseForPayment && (
+        <div className="fixed inset-0 z-[110] flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm animate-fade-in overflow-y-auto">
+          <div className="glass-panel border border-slate-200 dark:border-white/10 w-full max-w-sm rounded-2xl shadow-2xl p-6 relative animate-slide-up">
+            <button onClick={() => setIsPurchasePaymentModalOpen(false)} className="absolute top-4 right-4 text-slate-500 dark:text-gray-400 hover:text-slate-900 dark:text-white transition bg-slate-800/60 p-1.5 rounded-xl hover:bg-slate-700 active:scale-95 cursor-pointer z-10">
+              <X size={18} />
+            </button>
+            <div className="flex items-center space-x-3 mb-6">
+              <div className="bg-emerald-500/20 w-10 h-10 rounded-xl flex items-center justify-center text-emerald-400 shrink-0">
+                <Wallet size={20} />
+              </div>
+              <div>
+                <h3 className="text-lg font-bold text-slate-900 dark:text-white leading-tight">Qarzni to'lash</h3>
+                <p className="text-xs text-slate-500 dark:text-gray-400 mt-0.5">{selectedPurchaseForPayment.supplierName || 'Ta\'minotchi'}</p>
+              </div>
+            </div>
+
+            <form onSubmit={handlePurchasePaymentSubmit} className="space-y-4">
+              <div className="bg-slate-50 dark:bg-slate-900/50 p-3 rounded-xl border border-slate-200 dark:border-white/5 space-y-2">
+                <div className="flex justify-between text-xs">
+                  <span className="text-slate-500 dark:text-gray-400">Jami qarz:</span>
+                  <span className="font-mono text-slate-900 dark:text-white">{formatCurrency(selectedPurchaseForPayment.totalCost)}</span>
+                </div>
+                <div className="flex justify-between text-xs">
+                  <span className="text-slate-500 dark:text-gray-400">To'langan:</span>
+                  <span className="font-mono text-emerald-500">{formatCurrency(selectedPurchaseForPayment.paidAmount || 0)}</span>
+                </div>
+                <div className="flex justify-between text-xs border-t border-slate-200 dark:border-white/5 pt-2 font-bold">
+                  <span className="text-red-500">Qoldiq qarz:</span>
+                  <span className="font-mono text-red-500">
+                    {formatCurrency(Number(selectedPurchaseForPayment.totalCost) - Number(selectedPurchaseForPayment.paidAmount || 0))}
+                  </span>
+                </div>
+              </div>
+
+              <div>
+                <label className="text-xs text-slate-500 dark:text-gray-400 block mb-1">To'lov summasi (Naqd berildi):</label>
+                <input
+                  type="text"
+                  required
+                  placeholder="Summani kiriting..."
+                  className="bg-white dark:bg-slate-900 border border-emerald-200 dark:border-emerald-500/30 rounded-xl text-slate-900 dark:text-white w-full p-2.5 focus:ring-emerald-500 focus:border-emerald-500 font-bold"
+                  value={purchasePaymentAmount}
+                  onChange={(e) => setPurchasePaymentAmount(formatNumberWithSpaces(e.target.value))}
+                  disabled={isSubmittingPurchasePayment}
+                />
+              </div>
+
+              <button
+                type="submit"
+                disabled={isSubmittingPurchasePayment}
+                className="w-full bg-emerald-500 hover:bg-emerald-600 text-white font-bold py-3 rounded-xl transition text-sm border border-emerald-400 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed flex justify-center items-center"
+              >
+                {isSubmittingPurchasePayment ? 'Saqlanmoqda...' : 'To\'lovni saqlash'}
+              </button>
+            </form>
+          </div>
+        </div>
+      )}
+
     </div>
   );
 };

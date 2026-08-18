@@ -37,6 +37,9 @@ export const InventoryPage = () => {
   const [initialBoxes, setInitialBoxes] = useState(0);
   const [imagePreview, setImagePreview] = useState('');
   const [imageFile, setImageFile] = useState(null);
+  const [paymentType, setPaymentType] = useState('CASH');
+  const [supplierName, setSupplierName] = useState('');
+  const [paidAmount, setPaidAmount] = useState('');
 
   // Edit Form states
   const [editId, setEditId] = useState('');
@@ -51,6 +54,9 @@ export const InventoryPage = () => {
   const [editStockBoxes, setEditStockBoxes] = useState(0);
   const [editImagePreview, setEditImagePreview] = useState('');
   const [editImageFile, setEditImageFile] = useState(null);
+  const [editPaymentType, setEditPaymentType] = useState('CASH');
+  const [editSupplierName, setEditSupplierName] = useState('');
+  const [editPaidAmount, setEditPaidAmount] = useState('');
   const [isUploading, setIsUploading] = useState(false);
   // Expense states
   const [isExpenseModalOpen, setIsExpenseModalOpen] = useState(false);
@@ -203,6 +209,11 @@ export const InventoryPage = () => {
     payload.append('boxCostPrice', parseNumberFromSpaces(boxCostPrice));
     payload.append('stock', Number(initialPieceStock));
     payload.append('boxes', Number(initialBoxes));
+    payload.append('paymentType', paymentType);
+    if (paymentType === 'DEBT') {
+      payload.append('supplierName', supplierName);
+      payload.append('paidAmount', parseNumberFromSpaces(paidAmount) || 0);
+    }
     if (imageFile) {
       payload.append('image', imageFile);
     }
@@ -221,6 +232,9 @@ export const InventoryPage = () => {
       setInitialPieceStock(0);
       setImagePreview('');
       setImageFile(null);
+      setPaymentType('CASH');
+      setSupplierName('');
+      setPaidAmount('');
 
       setInitialBoxes(0);
       setShowAddForm(false);
@@ -262,9 +276,11 @@ export const InventoryPage = () => {
     setEditStockPieces(0);
     setEditStockBoxes(0);
     
-    // Safely set image preview string
     setEditImagePreview(typeof product.imageUrl === 'string' ? product.imageUrl : '');
     setEditImageFile(null);
+    setEditPaymentType('CASH');
+    setEditSupplierName('');
+    setEditPaidAmount('');
     setShowEditForm(true);
   };
 
@@ -288,6 +304,11 @@ export const InventoryPage = () => {
     payload.append('boxCostPrice', parseNumberFromSpaces(editBoxCostPrice));
     payload.append('stock', Number(editStockPieces));
     payload.append('boxes', Number(editStockBoxes));
+    payload.append('paymentType', editPaymentType);
+    if (editPaymentType === 'DEBT') {
+      payload.append('supplierName', editSupplierName);
+      payload.append('paidAmount', parseNumberFromSpaces(editPaidAmount) || 0);
+    }
     if (editImageFile) {
       payload.append('image', editImageFile);
     }
@@ -432,20 +453,20 @@ export const InventoryPage = () => {
           <table className="w-full text-left border-collapse text-xs">
             <thead>
               <tr className="border-b border-slate-200 dark:border-white/5 bg-slate-100/50 dark:bg-slate-900/40  text-slate-500 dark:text-gray-400 uppercase tracking-wider font-semibold">
-                <th className="p-4">Mahsulot nomi</th>
-                <th className="p-4">Kategoriya</th>
-                <th className="p-4">Qutidagi dona</th>
-                <th className="p-4">Narxi (Dona / Quti)</th>
-                <th className="p-4">Zaxira (Dona)</th>
-                <th className="p-4">Zaxira (Quti)</th>
-                <th className="p-4">Holat</th>
-                <th className="p-4 text-center">Amallar</th>
+                <th className="min-w-[100px] whitespace-nowrap text-[10px] sm:text-xs py-2.5 px-3">Mahsulot nomi</th>
+                <th className="min-w-[100px] whitespace-nowrap text-[10px] sm:text-xs py-2.5 px-3">Kategoriya</th>
+                <th className="min-w-[100px] whitespace-nowrap text-[10px] sm:text-xs py-2.5 px-3">Qutidagi dona</th>
+                <th className="min-w-[100px] whitespace-nowrap text-[10px] sm:text-xs py-2.5 px-3">Narxi (Dona / Quti)</th>
+                <th className="min-w-[100px] whitespace-nowrap text-[10px] sm:text-xs py-2.5 px-3">Zaxira (Dona)</th>
+                <th className="min-w-[100px] whitespace-nowrap text-[10px] sm:text-xs py-2.5 px-3">Zaxira (Quti)</th>
+                <th className="min-w-[100px] whitespace-nowrap text-[10px] sm:text-xs py-2.5 px-3">Holat</th>
+                <th className="min-w-[100px] whitespace-nowrap text-[10px] sm:text-xs py-2.5 px-3 text-center">Amallar</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-200 dark:divide-white/5 text-slate-700 dark:text-gray-300">
               {displayedProducts.length === 0 ? (
                 <tr>
-                  <td colSpan="8" className="p-8 text-center text-slate-500 dark:text-gray-500 text-sm">
+                  <td colSpan="8" className="py-8 px-4 text-center text-xs sm:text-sm text-slate-400 whitespace-normal">
                     Hech qanday mahsulot topilmadi
                   </td>
                 </tr>
@@ -457,7 +478,7 @@ export const InventoryPage = () => {
 
                   return (
                     <tr key={product.id} className="hover:bg-white/[0.02] transition">
-                      <td className="p-4 font-semibold text-slate-900 dark:text-white">
+                      <td className="min-w-[100px] whitespace-nowrap text-xs sm:text-sm py-2.5 px-3 font-semibold text-slate-900 dark:text-white">
                         <div className="flex items-center space-x-3">
                           <div className="h-10 w-10 shrink-0 rounded-lg overflow-hidden bg-white dark:bg-slate-900 border border-slate-200 dark:border-white/5 flex items-center justify-center">
                             {product.imageUrl ? (
@@ -469,20 +490,20 @@ export const InventoryPage = () => {
                           <span>{product.name}</span>
                         </div>
                       </td>
-                      <td className="p-4 text-slate-500 dark:text-gray-400">{product.category?.name || 'Noma\'lum'}</td>
-                      <td className="p-4 text-slate-500 dark:text-gray-400">{product.quantityInBox} dona</td>
-                      <td className="p-4 text-slate-900 dark:text-white text-xs">
+                      <td className="min-w-[100px] whitespace-nowrap text-xs sm:text-sm py-2.5 px-3 text-slate-500 dark:text-gray-400">{product.category?.name || 'Noma\'lum'}</td>
+                      <td className="min-w-[100px] whitespace-nowrap text-xs sm:text-sm py-2.5 px-3 text-slate-500 dark:text-gray-400">{product.quantityInBox} dona</td>
+                      <td className="min-w-[100px] whitespace-nowrap text-xs sm:text-sm py-2.5 px-3 text-slate-900 dark:text-white text-xs">
                         <div className="text-[10px] text-slate-500 dark:text-gray-500">Tannarx: {Number(product.costPrice || 0).toLocaleString()} s.</div>
                         <div>
                           {Number(product.unitPrice).toLocaleString()} s. / <span className="text-brand-300 font-semibold">{Number(product.boxPrice).toLocaleString()} s.</span>
                         </div>
                       </td>
 
-                      <td className="p-4 font-mono text-slate-900 dark:text-white">{product.stockCount} dona</td>
-                      <td className="p-4 font-mono text-slate-900 dark:text-white">
+                      <td className="min-w-[100px] whitespace-nowrap text-xs sm:text-sm py-2.5 px-3 font-mono text-slate-900 dark:text-white">{product.stockCount} dona</td>
+                      <td className="min-w-[100px] whitespace-nowrap text-xs sm:text-sm py-2.5 px-3 font-mono text-slate-900 dark:text-white">
                         {boxCount} quti {pieceRem > 0 && `+ ${pieceRem} dona`}
                       </td>
-                      <td className="p-4">
+                      <td className="min-w-[100px] whitespace-nowrap text-xs sm:text-sm py-2.5 px-3">
                         <span className={`inline-block px-2 py-0.5 rounded-full font-bold text-[10px] uppercase border ${
                           product.stockCount === 0 
                             ? 'bg-red-500/20 text-red-400 border-red-500/30' 
@@ -493,7 +514,7 @@ export const InventoryPage = () => {
                           {product.stockCount === 0 ? 'Tugagan' : isLow ? 'Zaxira kam' : 'Yetarli'}
                         </span>
                       </td>
-                      <td className="p-4 text-center whitespace-nowrap">
+                      <td className="min-w-[100px] whitespace-nowrap text-xs sm:text-sm py-2.5 px-3 text-center whitespace-nowrap">
                         <button
                           onClick={() => handleEditClick(product)}
                           className="bg-blue-500/10 hover:bg-blue-500/20 text-blue-400 p-2 rounded-xl transition border border-blue-500/20 hover:border-blue-500/40 cursor-pointer inline-flex items-center justify-center mr-2"
@@ -520,7 +541,7 @@ export const InventoryPage = () => {
         {/* Mobile Card List (visible on < 640px) */}
         <div className="block sm:hidden overflow-y-auto flex-1 p-3 space-y-3">
           {displayedProducts.length === 0 ? (
-            <div className="p-8 text-center text-slate-500 dark:text-gray-500 text-sm">
+            <div className="py-8 px-4 text-center text-xs sm:text-sm text-slate-400 whitespace-normal">
               Hech qanday mahsulot topilmadi
             </div>
           ) : (
@@ -612,8 +633,8 @@ export const InventoryPage = () => {
 
       {/* Add Sweet Product Modal Overlay */}
       {showAddForm && (
-        <div className="fixed inset-0 bg-black/85 backdrop-blur-sm z-50 flex items-center justify-center p-4 overflow-y-auto">
-          <div className="glass-panel border-slate-200 dark:border-white/10 max-w-md w-full rounded-2xl p-5 sm:p-6 relative my-auto max-h-[95vh] overflow-y-auto animate-fade-in">
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm animate-fade-in overflow-y-auto">
+          <div className="glass-panel border border-slate-200 dark:border-white/10 w-full sm:max-w-md md:max-w-2xl rounded-2xl shadow-2xl p-4 sm:p-6 my-auto max-h-[90vh] flex flex-col relative overflow-hidden animate-slide-up">
             <button
               onClick={() => setShowAddForm(false)}
               className="absolute top-4 right-4 text-slate-500 dark:text-gray-400 hover:text-slate-900 dark:text-white"
@@ -625,8 +646,9 @@ export const InventoryPage = () => {
               <span>Yangi Mahsulot Qo'shish</span>
             </h2>
 
-            <form onSubmit={handleRegisterProduct} className="space-y-4 text-sm text-slate-700 dark:text-gray-300">
-              <div className="space-y-1">
+            <form onSubmit={handleRegisterProduct} className="flex flex-col flex-1 min-h-0 text-sm text-slate-700 dark:text-gray-300">
+              <div className="flex-1 overflow-y-auto pr-1 sm:pr-2 space-y-4 no-scrollbar">
+                <div className="space-y-1">
                 <label className="text-xs text-slate-500 dark:text-gray-400 block">Mahsulot Nomi:</label>
                 <input
                   type="text"
@@ -787,6 +809,67 @@ export const InventoryPage = () => {
                 </div>
               </div>
 
+              <div className="space-y-2 pt-2 border-t border-slate-200 dark:border-white/5">
+                <label className="text-[10px] sm:text-xs font-bold text-slate-700 dark:text-gray-300 block uppercase tracking-wider">
+                  Tovar Xaridi To'lov Turi:
+                </label>
+                <div className="flex flex-col sm:flex-row gap-3">
+                  <label className={`flex-1 flex items-center p-3 rounded-xl border cursor-pointer transition ${paymentType === 'CASH' ? 'border-brand-500 bg-brand-50/50 dark:bg-brand-500/10' : 'border-slate-200 dark:border-white/10 hover:border-brand-300'}`}>
+                    <input type="radio" name="paymentType" value="CASH" checked={paymentType === 'CASH'} onChange={() => setPaymentType('CASH')} className="text-brand-500 focus:ring-brand-500 mr-2" />
+                    <span className="text-xs font-medium text-slate-700 dark:text-gray-300">💵 Naqd to'landi</span>
+                  </label>
+                  <label className={`flex-1 flex items-center p-3 rounded-xl border cursor-pointer transition ${paymentType === 'DEBT' ? 'border-amber-500 bg-amber-50/50 dark:bg-amber-500/10' : 'border-slate-200 dark:border-white/10 hover:border-amber-300'}`}>
+                    <input type="radio" name="paymentType" value="DEBT" checked={paymentType === 'DEBT'} onChange={() => setPaymentType('DEBT')} className="text-amber-500 focus:ring-amber-500 mr-2" />
+                    <span className="text-xs font-medium text-slate-700 dark:text-gray-300">⏳ Nasiyaga olindi</span>
+                  </label>
+                </div>
+                
+                {paymentType === 'DEBT' && (
+                  <div className="space-y-3 mt-3 animate-fade-in">
+                    <div className="space-y-1">
+                      <label className="text-[10px] sm:text-xs text-amber-600 dark:text-amber-500 block">Ta'minotchi / Postavshik nomi:</label>
+                      <input
+                        type="text"
+                        required
+                        placeholder="Masalan: MCHJ 'Sladosti', Akrom aka..."
+                        className="bg-white dark:bg-slate-900 border border-amber-200 dark:border-amber-500/30 rounded-xl text-slate-900 dark:text-white w-full p-2.5 focus:ring-amber-500 focus:border-amber-500 text-xs sm:text-sm"
+                        value={supplierName}
+                        onChange={(e) => setSupplierName(e.target.value)}
+                      />
+                    </div>
+                    <div className="space-y-1">
+                      <label className="text-[10px] sm:text-xs text-amber-600 dark:text-amber-500 block">Boshlang'ich to'lov (Naqd berildi) (s.):</label>
+                      <input
+                        type="text"
+                        placeholder="0"
+                        className="bg-white dark:bg-slate-900 border border-amber-200 dark:border-amber-500/30 rounded-xl text-slate-900 dark:text-white w-full p-2.5 focus:ring-amber-500 focus:border-amber-500 text-xs sm:text-sm"
+                        value={paidAmount}
+                        onChange={(e) => setPaidAmount(formatNumberWithSpaces(e.target.value))}
+                      />
+                    </div>
+                  </div>
+                )}
+                
+                {(Number(initialBoxes) > 0 || Number(initialPieceStock) > 0) && (
+                  <div className="p-3 bg-slate-50 dark:bg-slate-900/50 rounded-xl border border-slate-200 dark:border-white/5 mt-3 space-y-2">
+                    <div className="flex justify-between items-center">
+                      <span className="text-xs text-slate-500 dark:text-gray-400">Jami xarid qiymati:</span>
+                      <span className={`font-mono font-bold ${paymentType === 'CASH' ? 'text-brand-600 dark:text-brand-400' : 'text-amber-600 dark:text-amber-400'}`}>
+                        {formatNumberWithSpaces((Number(initialBoxes) * Number(parseNumberFromSpaces(boxCostPrice) || 0)) + (Number(initialPieceStock) * Number(parseNumberFromSpaces(costPrice) || 0)))} s.
+                      </span>
+                    </div>
+                    {paymentType === 'DEBT' && (
+                      <div className="flex justify-between items-center border-t border-slate-200 dark:border-white/5 pt-2">
+                        <span className="text-xs text-red-500 dark:text-red-400">Qoldiq qarz:</span>
+                        <span className="font-mono font-bold text-red-600 dark:text-red-400">
+                          {formatNumberWithSpaces(Math.max(0, ((Number(initialBoxes) * Number(parseNumberFromSpaces(boxCostPrice) || 0)) + (Number(initialPieceStock) * Number(parseNumberFromSpaces(costPrice) || 0))) - Number(parseNumberFromSpaces(paidAmount) || 0)))} s.
+                        </span>
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
+
               <div className="space-y-1">
                 <label className="text-xs text-slate-500 dark:text-gray-400 block">Mahsulot rasmi (ixtiyoriy):</label>
                 <div className="flex flex-col space-y-2">
@@ -818,12 +901,15 @@ export const InventoryPage = () => {
                 </div>
               </div>
 
-              <button
-                type="submit"
-                className="w-full bg-brand-500 hover:bg-brand-600 text-white font-bold py-3 rounded-xl transition text-sm mt-6 border border-brand-400 cursor-pointer min-h-[44px] flex items-center justify-center"
-              >
-                Mahsulotni qo'shish
-              </button>
+              </div>
+              <div className="pt-4 mt-4 border-t border-slate-200 dark:border-white/5 shrink-0">
+                <button
+                  type="submit"
+                  className="w-full bg-brand-500 hover:bg-brand-600 text-white font-bold py-3 rounded-xl transition text-sm border border-brand-400 cursor-pointer min-h-[44px] flex items-center justify-center shadow-lg shadow-brand-500/20"
+                >
+                  Mahsulotni qo'shish
+                </button>
+              </div>
             </form>
           </div>
         </div>
@@ -831,8 +917,8 @@ export const InventoryPage = () => {
 
       {/* Edit Sweet Product Modal Overlay */}
       {showEditForm && (
-        <div className="fixed inset-0 bg-black/85 backdrop-blur-sm z-50 flex items-center justify-center p-4 overflow-y-auto">
-          <div className="glass-panel border-slate-200 dark:border-white/10 max-w-md w-full rounded-2xl p-5 sm:p-6 relative my-auto max-h-[95vh] overflow-y-auto">
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm animate-fade-in overflow-y-auto">
+          <div className="glass-panel border border-slate-200 dark:border-white/10 w-full sm:max-w-md md:max-w-2xl rounded-2xl shadow-2xl p-4 sm:p-6 my-auto max-h-[90vh] flex flex-col relative overflow-hidden animate-slide-up">
             <button
               onClick={() => setShowEditForm(false)}
               className="absolute top-4 right-4 text-slate-500 dark:text-gray-400 hover:text-slate-900 dark:text-white"
@@ -844,8 +930,9 @@ export const InventoryPage = () => {
               <span>Mahsulotni Tahrirlash</span>
             </h2>
 
-            <form onSubmit={handleUpdateProduct} className="space-y-4 text-sm text-slate-700 dark:text-gray-300">
-              <div className="space-y-1">
+            <form onSubmit={handleUpdateProduct} className="flex flex-col flex-1 min-h-0 text-sm text-slate-700 dark:text-gray-300">
+              <div className="flex-1 overflow-y-auto pr-1 sm:pr-2 space-y-4 no-scrollbar">
+                <div className="space-y-1">
                 <label className="text-xs text-slate-500 dark:text-gray-400 block">Mahsulot Nomi:</label>
                 <input
                   type="text"
@@ -1005,6 +1092,67 @@ export const InventoryPage = () => {
                 </div>
               </div>
 
+              <div className="space-y-2 pt-2 border-t border-slate-200 dark:border-white/5">
+                <label className="text-[10px] sm:text-xs font-bold text-slate-700 dark:text-gray-300 block uppercase tracking-wider">
+                  Tovar Xaridi To'lov Turi:
+                </label>
+                <div className="flex flex-col sm:flex-row gap-3">
+                  <label className={`flex-1 flex items-center p-3 rounded-xl border cursor-pointer transition ${editPaymentType === 'CASH' ? 'border-brand-500 bg-brand-50/50 dark:bg-brand-500/10' : 'border-slate-200 dark:border-white/10 hover:border-brand-300'}`}>
+                    <input type="radio" name="editPaymentType" value="CASH" checked={editPaymentType === 'CASH'} onChange={() => setEditPaymentType('CASH')} className="text-brand-500 focus:ring-brand-500 mr-2" />
+                    <span className="text-xs font-medium text-slate-700 dark:text-gray-300">💵 Naqd to'landi</span>
+                  </label>
+                  <label className={`flex-1 flex items-center p-3 rounded-xl border cursor-pointer transition ${editPaymentType === 'DEBT' ? 'border-amber-500 bg-amber-50/50 dark:bg-amber-500/10' : 'border-slate-200 dark:border-white/10 hover:border-amber-300'}`}>
+                    <input type="radio" name="editPaymentType" value="DEBT" checked={editPaymentType === 'DEBT'} onChange={() => setEditPaymentType('DEBT')} className="text-amber-500 focus:ring-amber-500 mr-2" />
+                    <span className="text-xs font-medium text-slate-700 dark:text-gray-300">⏳ Nasiyaga olindi</span>
+                  </label>
+                </div>
+                
+                {editPaymentType === 'DEBT' && (
+                  <div className="space-y-3 mt-3 animate-fade-in">
+                    <div className="space-y-1">
+                      <label className="text-[10px] sm:text-xs text-amber-600 dark:text-amber-500 block">Ta'minotchi / Postavshik nomi:</label>
+                      <input
+                        type="text"
+                        required
+                        placeholder="Masalan: MCHJ 'Sladosti', Akrom aka..."
+                        className="bg-white dark:bg-slate-900 border border-amber-200 dark:border-amber-500/30 rounded-xl text-slate-900 dark:text-white w-full p-2.5 focus:ring-amber-500 focus:border-amber-500 text-xs sm:text-sm"
+                        value={editSupplierName}
+                        onChange={(e) => setEditSupplierName(e.target.value)}
+                      />
+                    </div>
+                    <div className="space-y-1">
+                      <label className="text-[10px] sm:text-xs text-amber-600 dark:text-amber-500 block">Boshlang'ich to'lov (Naqd berildi) (s.):</label>
+                      <input
+                        type="text"
+                        placeholder="0"
+                        className="bg-white dark:bg-slate-900 border border-amber-200 dark:border-amber-500/30 rounded-xl text-slate-900 dark:text-white w-full p-2.5 focus:ring-amber-500 focus:border-amber-500 text-xs sm:text-sm"
+                        value={editPaidAmount}
+                        onChange={(e) => setEditPaidAmount(formatNumberWithSpaces(e.target.value))}
+                      />
+                    </div>
+                  </div>
+                )}
+
+                {(Number(editStockBoxes) > 0 || Number(editStockPieces) > 0) && (
+                  <div className="p-3 bg-slate-50 dark:bg-slate-900/50 rounded-xl border border-slate-200 dark:border-white/5 mt-3 space-y-2">
+                    <div className="flex justify-between items-center">
+                      <span className="text-xs text-slate-500 dark:text-gray-400">Jami xarid qiymati:</span>
+                      <span className={`font-mono font-bold ${editPaymentType === 'CASH' ? 'text-brand-600 dark:text-brand-400' : 'text-amber-600 dark:text-amber-400'}`}>
+                        {formatNumberWithSpaces((Number(editStockBoxes) * Number(parseNumberFromSpaces(editBoxCostPrice) || 0)) + (Number(editStockPieces) * Number(parseNumberFromSpaces(editCostPrice) || 0)))} s.
+                      </span>
+                    </div>
+                    {editPaymentType === 'DEBT' && (
+                      <div className="flex justify-between items-center border-t border-slate-200 dark:border-white/5 pt-2">
+                        <span className="text-xs text-red-500 dark:text-red-400">Qoldiq qarz:</span>
+                        <span className="font-mono font-bold text-red-600 dark:text-red-400">
+                          {formatNumberWithSpaces(Math.max(0, ((Number(editStockBoxes) * Number(parseNumberFromSpaces(editBoxCostPrice) || 0)) + (Number(editStockPieces) * Number(parseNumberFromSpaces(editCostPrice) || 0))) - Number(parseNumberFromSpaces(editPaidAmount) || 0)))} s.
+                        </span>
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
+
               <div className="space-y-1">
                 <label className="text-xs text-slate-500 dark:text-gray-400 block">Mahsulot rasmi (ixtiyoriy):</label>
                 <div className="flex flex-col space-y-2">
@@ -1036,12 +1184,15 @@ export const InventoryPage = () => {
                 </div>
               </div>
 
-              <button
-                type="submit"
-                className="w-full bg-blue-500 hover:bg-blue-600 text-white font-bold py-3 rounded-xl transition text-sm mt-6 border border-blue-400 cursor-pointer min-h-[44px] flex items-center justify-center"
-              >
-                Mahsulotni yangilash
-              </button>
+              </div>
+              <div className="pt-4 mt-4 border-t border-slate-200 dark:border-white/5 shrink-0">
+                <button
+                  type="submit"
+                  className="w-full bg-blue-500 hover:bg-blue-600 text-white font-bold py-3 rounded-xl transition text-sm border border-blue-400 cursor-pointer min-h-[44px] flex items-center justify-center shadow-lg shadow-blue-500/20"
+                >
+                  Mahsulotni yangilash
+                </button>
+              </div>
             </form>
           </div>
         </div>

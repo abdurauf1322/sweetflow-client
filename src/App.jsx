@@ -286,8 +286,8 @@ function AppContent({ userRole, username, handleLogout, isInstalled, handleInsta
 
       {/* Password Change Modal */}
       {isPasswordModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-100/50 dark:bg-slate-900/40  dark:bg-black/60 backdrop-blur-sm animate-fade-in">
-          <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-white/10 rounded-2xl w-full max-w-sm shadow-2xl overflow-hidden animate-slide-up">
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm animate-fade-in overflow-y-auto">
+          <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-white/10 w-full sm:max-w-sm md:max-w-2xl rounded-2xl shadow-2xl p-4 sm:p-6 my-auto max-h-[90vh] flex flex-col relative overflow-hidden animate-slide-up">
             <div className="flex justify-between items-center p-4 sm:p-5 border-b border-slate-200 dark:border-white/10 bg-slate-50 dark:bg-slate-800/50">
               <h3 className="text-base font-bold text-slate-900 dark:text-white flex items-center gap-2">
                 <KeyRound size={18} className="text-brand-500 dark:text-brand-400" />

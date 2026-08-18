@@ -545,8 +545,8 @@ export const POSPage = () => {
 
       {/* Digital Invoice Success Screen Modal Overlay */}
       {successOrder && (
-        <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4 overflow-y-auto">
-          <div className="glass-panel border-green-500/20 max-w-md w-full rounded-3xl p-5 sm:p-6 relative overflow-hidden my-auto max-h-[95vh] overflow-y-auto">
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm animate-fade-in overflow-y-auto">
+          <div className="glass-panel border border-slate-200 dark:border-white/10 w-full sm:max-w-md md:max-w-2xl rounded-2xl shadow-2xl p-4 sm:p-6 my-auto max-h-[90vh] flex flex-col relative overflow-hidden animate-slide-up">
             <div className="absolute top-0 left-0 right-0 h-1 bg-green-500"></div>
             
             <div className="flex flex-col items-center text-center space-y-2 mb-6">

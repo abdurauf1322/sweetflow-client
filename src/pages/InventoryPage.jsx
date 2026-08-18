@@ -53,6 +53,7 @@ export const InventoryPage = () => {
   const [editStockPieces, setEditStockPieces] = useState(0);
   const [editStockBoxes, setEditStockBoxes] = useState(0);
   const [editImagePreview, setEditImagePreview] = useState('');
+  const [editRemoveImage, setEditRemoveImage] = useState(false);
   const [editImageFile, setEditImageFile] = useState(null);
   const [editPaymentType, setEditPaymentType] = useState('CASH');
   const [editSupplierName, setEditSupplierName] = useState('');
@@ -71,23 +72,27 @@ export const InventoryPage = () => {
     if (file) {
       if (isEdit) {
         setEditImageFile(file);
+        setEditImagePreview(URL.createObjectURL(file));
       } else {
         setImageFile(file);
+        setImagePreview(URL.createObjectURL(file));
       }
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        if (isEdit) {
-          setEditImagePreview(reader.result);
-        } else {
-          setImagePreview(reader.result);
-        }
-      };
-      reader.readAsDataURL(file);
     } else {
       if (!isEdit) {
         setImagePreview('');
+        setImageFile(null);
       }
     }
+  };
+
+  const handleClearImage = () => {
+    if (imagePreview && imagePreview.startsWith('blob:')) {
+      URL.revokeObjectURL(imagePreview);
+    }
+    setImagePreview('');
+    setImageFile(null);
+    const input = document.getElementById('product-image-upload');
+    if (input) input.value = '';
   };
 
   const handleAddExpenseSubmit = async (e) => {
@@ -278,6 +283,7 @@ export const InventoryPage = () => {
     
     setEditImagePreview(typeof product.imageUrl === 'string' ? product.imageUrl : '');
     setEditImageFile(null);
+    setEditRemoveImage(false);
     setEditPaymentType('CASH');
     setEditSupplierName('');
     setEditPaidAmount('');
@@ -311,10 +317,9 @@ export const InventoryPage = () => {
     }
     if (editImageFile) {
       payload.append('image', editImageFile);
+    } else if (editRemoveImage) {
+      payload.append('removeImage', 'true');
     }
-
-
-
     setIsUploading(true);
     const res = await updateProduct(editId, payload);
     setIsUploading(false);
@@ -636,8 +641,11 @@ export const InventoryPage = () => {
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm animate-fade-in overflow-y-auto">
           <div className="glass-panel border border-slate-200 dark:border-white/10 w-full sm:max-w-md md:max-w-2xl rounded-2xl shadow-2xl p-4 sm:p-6 my-auto max-h-[90vh] flex flex-col relative overflow-hidden animate-slide-up">
             <button
-              onClick={() => setShowAddForm(false)}
-              className="absolute top-4 right-4 text-slate-500 dark:text-gray-400 hover:text-slate-900 dark:text-white"
+              onClick={() => {
+                handleClearImage();
+                setShowAddForm(false);
+              }}
+              className="absolute top-4 right-4 text-slate-500 dark:text-gray-400 hover:text-slate-900 dark:text-white transition bg-slate-100 dark:bg-slate-800 p-2 rounded-xl"
             >
               <X size={20} />
             </button>
@@ -873,30 +881,37 @@ export const InventoryPage = () => {
               <div className="space-y-1">
                 <label className="text-xs text-slate-500 dark:text-gray-400 block">Mahsulot rasmi (ixtiyoriy):</label>
                 <div className="flex flex-col space-y-2">
-                  <input
-                    type="file"
-                    accept="image/*,image/jpeg,image/png"
-                    id="product-image-upload"
-                    className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-white/10 rounded-xl text-slate-900 dark:text-white w-full p-2 text-xs"
-                    onChange={(e) => handleImageUpload(e, false)}
-                    disabled={isUploading}
-                  />
+                  {!imagePreview && (
+                    <input
+                      type="file"
+                      accept="image/*,image/jpeg,image/png"
+                      id="product-image-upload"
+                      className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-white/10 rounded-xl text-slate-900 dark:text-white w-full p-2 text-xs"
+                      onChange={(e) => handleImageUpload(e, false)}
+                      disabled={isUploading}
+                    />
+                  )}
                   {isUploading && <span className="text-xs text-brand-400">Yuklanmoqda...</span>}
                   {imagePreview && (
-                    <img 
-                      src={imagePreview.startsWith('data:') ? imagePreview : (getImageUrl(imagePreview) || undefined)} 
-                      alt="Preview" 
-                      className="h-20 w-20 object-cover rounded-lg border border-slate-200 dark:border-white/10" 
-                      onError={(e) => {
-                        if (!imagePreview.startsWith('data:') && !getImageUrl(imagePreview)) {
+                    <div className="relative inline-block w-24 h-24 sm:w-28 sm:h-28 rounded-2xl border border-slate-700 bg-slate-800/50 group mt-2">
+                      <img 
+                        src={imagePreview.startsWith('data:') || imagePreview.startsWith('blob:') ? imagePreview : (getImageUrl(imagePreview) || undefined)} 
+                        alt="Preview" 
+                        className="w-full h-full object-cover rounded-2xl" 
+                        onError={(e) => {
                           e.target.onerror = null;
                           e.target.src = fallbackImage;
-                        } else {
-                          e.target.onerror = null;
-                          e.target.src = fallbackImage;
-                        }
-                      }}
-                    />
+                        }}
+                      />
+                      <button 
+                        type="button" 
+                        onClick={handleClearImage}
+                        className="absolute -top-2 -right-2 bg-red-500 hover:bg-red-600 text-white rounded-full p-1.5 shadow-lg active:scale-95 transition-all z-10"
+                        title="Rasmni o'chirish"
+                      >
+                        <X size={14} />
+                      </button>
+                    </div>
                   )}
                 </div>
               </div>
@@ -1166,20 +1181,33 @@ export const InventoryPage = () => {
                   />
                   {isUploading && <span className="text-xs text-brand-400">Yuklanmoqda...</span>}
                   {editImagePreview && (
-                    <img 
-                      src={editImagePreview.startsWith('data:') ? editImagePreview : (getImageUrl(editImagePreview) || undefined)} 
-                      alt="Preview" 
-                      className="h-20 w-20 object-cover rounded-lg border border-slate-200 dark:border-white/10" 
-                      onError={(e) => {
-                        if (!editImagePreview.startsWith('data:') && !getImageUrl(editImagePreview)) {
-                          e.target.onerror = null;
-                          e.target.src = fallbackImage;
-                        } else {
-                          e.target.onerror = null;
-                          e.target.src = fallbackImage;
-                        }
-                      }}
-                    />
+                    <div className="relative inline-block h-20 w-20">
+                      <img 
+                        src={editImagePreview.startsWith('data:') ? editImagePreview : (getImageUrl(editImagePreview) || undefined)} 
+                        alt="Preview" 
+                        className="h-20 w-20 object-cover rounded-lg border border-slate-200 dark:border-white/10" 
+                        onError={(e) => {
+                          if (!editImagePreview.startsWith('data:') && !getImageUrl(editImagePreview)) {
+                            e.target.onerror = null;
+                            e.target.src = fallbackImage;
+                          } else {
+                            e.target.onerror = null;
+                            e.target.src = fallbackImage;
+                          }
+                        }}
+                      />
+                      <button 
+                        type="button" 
+                        onClick={() => {
+                          setEditImagePreview('');
+                          setEditImageFile(null);
+                          setEditRemoveImage(true);
+                        }}
+                        className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-1 shadow hover:bg-red-600 z-10"
+                      >
+                        <X size={12} />
+                      </button>
+                    </div>
                   )}
                 </div>
               </div>

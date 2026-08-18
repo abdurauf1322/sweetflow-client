@@ -13,10 +13,17 @@ export const AnalyticsPage = () => {
   const [newBalance, setNewBalance] = useState('');
   const [isExpensesHistoryModalOpen, setIsExpensesHistoryModalOpen] = useState(false);
   const [isPurchaseHistoryModalOpen, setIsPurchaseHistoryModalOpen] = useState(false);
+  const [isSupplierDebtsModalOpen, setIsSupplierDebtsModalOpen] = useState(false);
+  const [isDebtStoresModalOpen, setIsDebtStoresModalOpen] = useState(false);
+  
+  // Expense states
+  const [isExpenseModalOpen, setIsExpenseModalOpen] = useState(false);
+  const [expenseAmount, setExpenseAmount] = useState('');
+  const [expenseDescription, setExpenseDescription] = useState('');
+  const [addingExpense, setAddingExpense] = useState(false);
   const [isProfitDetailsModalOpen, setIsProfitDetailsModalOpen] = useState(false);
   const [isSalesHistoryModalOpen, setIsSalesHistoryModalOpen] = useState(false);
   const [isCashInflowModalOpen, setIsCashInflowModalOpen] = useState(false);
-  const [isDebtStoresModalOpen, setIsDebtStoresModalOpen] = useState(false);
   const [isSoldProductsModalOpen, setIsSoldProductsModalOpen] = useState(false);
   const [purchases, setPurchases] = useState([]);
   const [loadingPurchases, setLoadingPurchases] = useState(false);
@@ -24,6 +31,10 @@ export const AnalyticsPage = () => {
   const [selectedPurchaseForPayment, setSelectedPurchaseForPayment] = useState(null);
   const [purchasePaymentAmount, setPurchasePaymentAmount] = useState('');
   const [isSubmittingPurchasePayment, setIsSubmittingPurchasePayment] = useState(false);
+  
+
+  const [supplierDebts, setSupplierDebts] = useState([]);
+  const [loadingSupplierDebts, setLoadingSupplierDebts] = useState(false);
   const isBoss = (localStorage.getItem('role') || '').toUpperCase() === 'BOSS';
 
   const handleUpdateBalanceSubmit = async (e) => {
@@ -63,6 +74,7 @@ export const AnalyticsPage = () => {
       toast.success('Qarz to\'lovi muvaffaqiyatli saqlandi');
       setIsPurchasePaymentModalOpen(false);
       fetchPurchases();
+      if (isSupplierDebtsModalOpen) fetchSupplierDebts();
       fetchReport(true);
     } catch (err) {
       toast.error(err.response?.data?.message || 'Xatolik yuz berdi');
@@ -102,11 +114,31 @@ export const AnalyticsPage = () => {
     }
   };
 
+  const fetchSupplierDebts = async () => {
+    setLoadingSupplierDebts(true);
+    try {
+      const response = await api.get('/purchases', {
+        params: { period, type: 'debt', _t: Date.now() },
+      });
+      setSupplierDebts(response.data.data.purchases);
+    } catch (err) {
+      toast.error('Ta\'minotchi qarzlarini yuklashda xatolik yuz berdi');
+    } finally {
+      setLoadingSupplierDebts(false);
+    }
+  };
+
   useEffect(() => {
     if (isPurchaseHistoryModalOpen) {
       fetchPurchases();
     }
   }, [isPurchaseHistoryModalOpen, period]);
+
+  useEffect(() => {
+    if (isSupplierDebtsModalOpen) {
+      fetchSupplierDebts();
+    }
+  }, [isSupplierDebtsModalOpen, period]);
 
   const fetchReport = async (silent = false) => {
     if (!silent) setLoading(true);
@@ -120,6 +152,32 @@ export const AnalyticsPage = () => {
       if (!silent) setError(err.response?.data?.message || 'Failed to fetch sales analytics');
     } finally {
       if (!silent) setLoading(false);
+    }
+  };
+
+  const handleAddExpenseSubmit = async (e) => {
+    e.preventDefault();
+    const rawAmount = parseNumberFromSpaces(expenseAmount);
+    if (!rawAmount || !expenseDescription.trim()) {
+      toast.error("Barcha maydonlarni to'g'ri to'ldiring");
+      return;
+    }
+
+    setAddingExpense(true);
+    try {
+      await api.post('/expenses', {
+        amount: Number(rawAmount),
+        description: expenseDescription.trim(),
+      });
+      toast.success("Xarajat saqlandi");
+      setIsExpenseModalOpen(false);
+      setExpenseAmount('');
+      setExpenseDescription('');
+      fetchReport(true);
+    } catch (error) {
+      toast.error(error.response?.data?.message || "Xarajatni saqlashda xatolik");
+    } finally {
+      setAddingExpense(false);
     }
   };
 
@@ -312,6 +370,17 @@ export const AnalyticsPage = () => {
                   <span className="text-[10px] text-slate-500 dark:text-gray-400 uppercase font-black tracking-widest">Jami Xarajat (Tovarlar)</span>
                   <h3 className="text-2xl font-black text-orange-400 mt-1 tracking-tight">{formatCurrency(report.totalExpenses)}</h3>
                 </div>
+              </div>
+              <div className="mt-4 flex">
+                <span 
+                  onClick={(e) => { e.stopPropagation(); setIsSupplierDebtsModalOpen(true); }}
+                  className={`inline-block px-3 py-1.5 rounded-xl font-black text-[10px] tracking-wider uppercase border shadow-sm cursor-pointer hover:scale-105 transition-transform ${
+                  (report.totalSupplierDebt || 0) > 0 
+                    ? 'bg-red-500/20 text-red-400 border-red-500/40 shadow-red-500/10' 
+                    : 'bg-emerald-500/20 text-emerald-400 border-emerald-500/40 shadow-emerald-500/10'
+                }`}>
+                  Bizning Qarz (Nasiya): {formatCurrency(report.totalSupplierDebt || 0)}
+                </span>
               </div>
             </div>
 
@@ -611,14 +680,22 @@ export const AnalyticsPage = () => {
             >
               <X size={20} />
             </button>
-            <div className="flex items-center space-x-3 mb-6">
-              <div className="bg-red-500/20 w-10 h-10 min-w-[40px] rounded-xl flex items-center justify-center text-red-400 shrink-0">
-                <AlertTriangle size={24} />
+            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
+              <div className="flex items-center space-x-3">
+                <div className="bg-red-500/20 w-10 h-10 min-w-[40px] rounded-xl flex items-center justify-center text-red-400 shrink-0">
+                  <AlertTriangle size={24} />
+                </div>
+                <div>
+                  <h3 className="text-base sm:text-lg font-bold text-slate-900 dark:text-white leading-tight line-clamp-2">Boshqa xarajatlar tarixi</h3>
+                  <p className="text-xs text-slate-500 dark:text-gray-400 mt-0.5">{getPeriodLabel()} ({report?.expensesList?.length || 0} ta yozuv)</p>
+                </div>
               </div>
-              <div>
-                <h3 className="text-base sm:text-lg font-bold text-slate-900 dark:text-white leading-tight line-clamp-2">Boshqa xarajatlar tarixi</h3>
-                <p className="text-xs text-slate-500 dark:text-gray-400 mt-0.5">{getPeriodLabel()} ({report?.expensesList?.length || 0} ta yozuv)</p>
-              </div>
+              <button 
+                onClick={() => setIsExpenseModalOpen(true)}
+                className="bg-brand-500 hover:bg-brand-600 text-white px-4 py-2 rounded-xl text-sm font-semibold transition shadow-lg w-full sm:w-auto"
+              >
+                + Yangi qo'shish
+              </button>
             </div>
             
             <div className="bg-slate-50/50 dark:bg-slate-950/50 rounded-2xl border border-slate-200 dark:border-white/5 overflow-x-auto w-full no-scrollbar flex-1 overflow-y-auto max-h-[70vh]">
@@ -696,12 +773,19 @@ export const AnalyticsPage = () => {
                         <td className="min-w-[100px] whitespace-nowrap text-xs sm:text-sm py-2.5 px-3 text-slate-900 dark:text-white font-medium">{hist.product?.name || 'Noma\'lum'}</td>
                         <td className="min-w-[100px] whitespace-nowrap text-xs sm:text-sm py-2.5 px-3">
                           {hist.paymentType === 'DEBT' ? (
-                            <div className="inline-flex flex-col items-start">
-                              <span className="px-2 py-0.5 bg-amber-500/10 text-amber-500 border border-amber-500/20 rounded-md text-[10px] font-bold">Nasiyaga</span>
-                              <span className="text-[10px] text-slate-500 dark:text-gray-400 mt-0.5">{hist.supplierName || 'Ta\'minotchi'}</span>
-                            </div>
+                            hist.isPaid ? (
+                              <div className="inline-flex flex-col items-start">
+                                <span className="px-2 py-0.5 bg-emerald-500/10 text-emerald-500 border border-emerald-500/20 rounded-md text-[10px] font-bold">🟢 To'langan</span>
+                                <span className="text-[10px] text-slate-500 dark:text-gray-400 mt-0.5">{hist.supplierName || 'Ta\'minotchi'}</span>
+                              </div>
+                            ) : (
+                              <div className="inline-flex flex-col items-start">
+                                <span className="px-2 py-0.5 bg-red-500/10 text-red-500 border border-red-500/20 rounded-md text-[10px] font-bold">🔴 Nasiya</span>
+                                <span className="text-[10px] text-slate-500 dark:text-gray-400 mt-0.5">{hist.supplierName || 'Ta\'minotchi'}</span>
+                              </div>
+                            )
                           ) : (
-                            <span className="px-2 py-0.5 bg-brand-500/10 text-brand-500 border border-brand-500/20 rounded-md text-[10px] font-bold">Naqd</span>
+                            <span className="px-2 py-0.5 bg-emerald-500/10 text-emerald-500 border border-emerald-500/20 rounded-md text-[10px] font-bold">🟢 To'langan (Naqd)</span>
                           )}
                         </td>
                         <td className="min-w-[100px] whitespace-nowrap text-xs sm:text-sm py-2.5 px-3 text-center text-slate-700 dark:text-gray-300">
@@ -715,16 +799,13 @@ export const AnalyticsPage = () => {
                         </td>
                         <td className="min-w-[120px] whitespace-nowrap text-xs sm:text-sm py-2.5 px-3 text-right text-orange-400 font-black tracking-tight whitespace-nowrap">
                           <div>{formatCurrency(hist.totalCost)}</div>
-                          {hist.paymentType === 'DEBT' && (Number(hist.totalCost) - Number(hist.paidAmount || 0) > 0) && (
+                          {hist.paymentType === 'DEBT' && !hist.isPaid && (
                             <div className="flex flex-col items-end mt-1 space-y-1">
-                              <span className="text-[10px] text-red-400 font-bold bg-red-400/10 px-1.5 py-0.5 rounded">Qarz: {formatCurrency(Number(hist.totalCost) - Number(hist.paidAmount || 0))}</span>
+                              <span className="text-[10px] text-red-400 font-bold bg-red-400/10 px-1.5 py-0.5 rounded">🔴 Qarzdorlik: {formatCurrency(hist.debtAmount || (Number(hist.totalCost) - Number(hist.paidAmount || 0)))}</span>
                               <button onClick={() => openPurchasePaymentModal(hist)} className="bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-500 border border-emerald-500/30 px-2 py-1 rounded flex items-center text-[10px] transition font-bold active:scale-95">
-                                <Wallet size={12} className="mr-1" /> To'lash
+                                <Wallet size={12} className="mr-1" /> To'lov qilish
                               </button>
                             </div>
-                          )}
-                          {hist.paymentType === 'DEBT' && (Number(hist.totalCost) - Number(hist.paidAmount || 0) <= 0) && (
-                            <div className="text-[10px] text-emerald-500 mt-1 font-bold bg-emerald-500/10 px-1.5 py-0.5 rounded inline-block">To'liq to'langan</div>
                           )}
                         </td>
                       </tr>
@@ -1011,8 +1092,131 @@ export const AnalyticsPage = () => {
           </div>
         </div>
       )}
+      {/* Supplier Debts Modal */}
+      {isSupplierDebtsModalOpen && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm animate-fade-in overflow-y-auto">
+          <div className="glass-panel border border-slate-200 dark:border-white/10 w-full sm:max-w-4xl md:max-w-2xl rounded-2xl shadow-2xl p-4 sm:p-6 my-auto max-h-[90vh] flex flex-col relative overflow-hidden animate-slide-up">
+            <button onClick={() => setIsSupplierDebtsModalOpen(false)} className="absolute top-3 right-3 sm:top-4 sm:right-4 text-slate-500 dark:text-gray-400 hover:text-slate-900 dark:text-white transition bg-slate-800/60 p-2 rounded-xl hover:bg-slate-700 active:scale-95 cursor-pointer z-10">
+              <X size={20} />
+            </button>
+            <div className="flex items-center space-x-3 mb-6">
+              <div className="bg-red-500/20 w-10 h-10 min-w-[40px] rounded-xl flex items-center justify-center text-red-400 shrink-0"><AlertTriangle size={24} /></div>
+              <div>
+                <h3 className="text-base sm:text-lg font-bold text-slate-900 dark:text-white leading-tight line-clamp-2">📦 Nasiyaga Olingan Tovar Qarzlarimiz (Ta'minotchilar)</h3>
+                <p className="text-xs text-slate-500 dark:text-gray-400 mt-0.5">{getPeriodLabel()} ({supplierDebts?.length || 0} ta yozuv)</p>
+              </div>
+            </div>
+            <div className="bg-slate-50/50 dark:bg-slate-950/50 rounded-2xl border border-slate-200 dark:border-white/5 overflow-x-auto w-full no-scrollbar flex-1 overflow-y-auto max-h-[70vh]">
+              <table className="w-full text-left border-collapse text-xs sm:text-sm">
+                <thead>
+                  <tr className="bg-white/80 dark:bg-slate-900/80 text-slate-500 dark:text-gray-400 uppercase tracking-wider font-semibold border-b border-slate-200 dark:border-white/5 sticky top-0 backdrop-blur-md">
+                    <th className="min-w-[100px] whitespace-nowrap text-[10px] sm:text-xs py-2.5 px-3">Sana</th>
+                    <th className="min-w-[100px] whitespace-nowrap text-[10px] sm:text-xs py-2.5 px-3">Ta'minotchi / Postavshik</th>
+                    <th className="min-w-[100px] whitespace-nowrap text-[10px] sm:text-xs py-2.5 px-3">Mahsulot</th>
+                    <th className="min-w-[100px] whitespace-nowrap text-[10px] sm:text-xs py-2.5 px-3 text-right">Umumiy xarid qiymati</th>
+                    <th className="min-w-[100px] whitespace-nowrap text-[10px] sm:text-xs py-2.5 px-3 text-right">To'langan qismi</th>
+                    <th className="min-w-[100px] whitespace-nowrap text-[10px] sm:text-xs py-2.5 px-3 text-right">Qolgan Qarzimiz</th>
+                    <th className="min-w-[100px] whitespace-nowrap text-[10px] sm:text-xs py-2.5 px-3 text-center">Amal</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-200 dark:divide-white/5">
+                  {loadingSupplierDebts ? (
+                    <tr><td colSpan="7" className="py-8 px-4 text-center text-xs sm:text-sm text-slate-400 whitespace-normal">Yuklanmoqda...</td></tr>
+                  ) : !supplierDebts || supplierDebts.length === 0 ? (
+                    <tr><td colSpan="7" className="py-8 px-4 text-center text-xs sm:text-sm text-slate-400 whitespace-normal">Bu davrda nasiyaga olingan tovarlar mavjud emas.</td></tr>
+                  ) : (
+                    supplierDebts.map((hist, idx) => {
+                      const debtAmount = hist.debtAmount || (Number(hist.totalCost) - Number(hist.paidAmount || 0));
+                      return (
+                      <tr key={hist.id || idx} className="hover:bg-white/[0.02] transition">
+                        <td className="min-w-[100px] whitespace-nowrap text-xs sm:text-sm py-2.5 px-3 text-slate-700 dark:text-gray-300 font-mono whitespace-nowrap"><Clock size={14} className="inline mr-2 text-slate-500 dark:text-gray-500" />{new Date(hist.createdAt).toLocaleDateString('ru-RU')}</td>
+                        <td className="min-w-[100px] whitespace-nowrap text-xs sm:text-sm py-2.5 px-3 text-slate-900 dark:text-white font-medium">{hist.supplierName || 'Noma\'lum'}</td>
+                        <td className="min-w-[100px] whitespace-nowrap text-xs sm:text-sm py-2.5 px-3 text-slate-700 dark:text-gray-300">
+                          <div className="font-medium text-slate-900 dark:text-white">{hist.product?.name || 'Noma\'lum'}</div>
+                          <div className="text-[10px] mt-0.5">
+                            {hist.addedBoxes > 0 && `${hist.addedBoxes} quti`}
+                            {hist.addedBoxes > 0 && hist.addedPieces > 0 && ' + '}
+                            {hist.addedPieces > 0 && `${hist.addedPieces} dona`}
+                          </div>
+                        </td>
+                        <td className="min-w-[100px] whitespace-nowrap text-xs sm:text-sm py-2.5 px-3 text-right text-slate-700 dark:text-gray-300 font-mono">
+                          {formatCurrency(hist.totalCost)}
+                        </td>
+                        <td className="min-w-[100px] whitespace-nowrap text-xs sm:text-sm py-2.5 px-3 text-right text-emerald-500 font-mono">
+                          {formatCurrency(hist.paidAmount || 0)}
+                        </td>
+                        <td className="min-w-[120px] whitespace-nowrap text-xs sm:text-sm py-2.5 px-3 text-right text-red-500 font-black tracking-tight whitespace-nowrap">
+                          {formatCurrency(debtAmount)}
+                        </td>
+                        <td className="min-w-[100px] whitespace-nowrap text-xs sm:text-sm py-2.5 px-3 text-center">
+                          <button onClick={() => openPurchasePaymentModal(hist)} className="bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-500 border border-emerald-500/30 px-3 py-1.5 rounded-lg flex items-center justify-center text-xs transition font-bold active:scale-95 w-full mx-auto cursor-pointer">
+                            <Wallet size={14} className="mr-1.5" /> Qarzni To'lash
+                          </button>
+                        </td>
+                      </tr>
+                    )})
+                  )}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Expense Modal */}
+      {isExpenseModalOpen && (
+        <div className="fixed inset-0 z-[110] flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm animate-fade-in">
+          <div className="glass-panel border border-slate-200 dark:border-white/10 w-full max-w-md rounded-2xl shadow-2xl p-6 relative animate-slide-up">
+            <h3 className="text-lg font-bold text-slate-900 dark:text-white mb-4 border-b border-slate-200 dark:border-white/10 pb-2">
+              Yangi xarajat qo'shish
+            </h3>
+            <form onSubmit={handleAddExpenseSubmit} className="space-y-4">
+              <div>
+                <label className="text-xs text-slate-500 dark:text-gray-400 block mb-1 font-semibold uppercase tracking-wider">Xarajat summasi</label>
+                <div className="relative">
+                  <input
+                    type="text"
+                    required
+                    value={expenseAmount}
+                    onChange={(e) => setExpenseAmount(formatNumberWithSpaces(e.target.value))}
+                    className="bg-slate-50 dark:bg-slate-900/50 border border-slate-200 dark:border-white/10 rounded-xl text-slate-900 dark:text-white w-full p-3 pl-10 text-lg font-bold focus:ring-2 focus:ring-brand-500 focus:border-transparent transition"
+                    placeholder="0"
+                  />
+                  <DollarSign size={18} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" />
+                </div>
+              </div>
+              <div>
+                <label className="text-xs text-slate-500 dark:text-gray-400 block mb-1 font-semibold uppercase tracking-wider">Izoh (Nima uchun?)</label>
+                <input
+                  type="text"
+                  required
+                  value={expenseDescription}
+                  onChange={(e) => setExpenseDescription(e.target.value)}
+                  className="bg-slate-50 dark:bg-slate-900/50 border border-slate-200 dark:border-white/10 rounded-xl text-slate-900 dark:text-white w-full p-3 text-sm focus:ring-2 focus:ring-brand-500 focus:border-transparent transition"
+                  placeholder="Masalan: Tushlik uchun..."
+                />
+              </div>
+              <div className="flex space-x-3 pt-2 border-t border-slate-200 dark:border-white/10 mt-6">
+                <button
+                  type="button"
+                  onClick={() => setIsExpenseModalOpen(false)}
+                  className="flex-1 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 font-bold py-3 rounded-xl transition text-sm cursor-pointer"
+                >
+                  Bekor qilish
+                </button>
+                <button
+                  type="submit"
+                  disabled={addingExpense}
+                  className="flex-1 bg-red-500 hover:bg-red-600 disabled:bg-red-500/50 text-white font-bold py-3 rounded-xl transition text-sm cursor-pointer shadow-lg shadow-red-500/25"
+                >
+                  {addingExpense ? 'Saqlanmoqda...' : 'Saqlash'}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
 
     </div>
   );
 };
-

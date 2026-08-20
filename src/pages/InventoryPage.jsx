@@ -893,11 +893,11 @@ export const InventoryPage = () => {
                   )}
                   {isUploading && <span className="text-xs text-brand-400">Yuklanmoqda...</span>}
                   {imagePreview && (
-                    <div className="relative inline-block w-24 h-24 sm:w-28 sm:h-28 rounded-2xl border border-slate-700 bg-slate-800/50 group mt-2">
+                    <div className="relative mt-2" style={{display:'inline-block', width:'96px', height:'96px'}}>
                       <img 
-                        src={imagePreview.startsWith('data:') || imagePreview.startsWith('blob:') ? imagePreview : (getImageUrl(imagePreview) || undefined)} 
+                        src={imagePreview}
                         alt="Preview" 
-                        className="w-full h-full object-cover rounded-2xl" 
+                        style={{width:'100%', height:'100%', objectFit:'cover', borderRadius:'12px', display:'block', border:'1px solid #334155'}}
                         onError={(e) => {
                           e.target.onerror = null;
                           e.target.src = fallbackImage;
@@ -906,10 +906,10 @@ export const InventoryPage = () => {
                       <button 
                         type="button" 
                         onClick={handleClearImage}
-                        className="absolute -top-2 -right-2 bg-red-500 hover:bg-red-600 text-white rounded-full p-1.5 shadow-lg active:scale-95 transition-all z-10"
+                        style={{position:'absolute', top:'-8px', right:'-8px', background:'#ef4444', border:'none', borderRadius:'50%', width:'22px', height:'22px', display:'flex', alignItems:'center', justifyContent:'center', cursor:'pointer', zIndex:10, color:'white'}}
                         title="Rasmni o'chirish"
                       >
-                        <X size={14} />
+                        <X size={13} />
                       </button>
                     </div>
                   )}
@@ -1174,26 +1174,21 @@ export const InventoryPage = () => {
                   <input
                     type="file"
                     accept="image/*,image/jpeg,image/png"
-                    id="product-image-edit-upload"
+                    id="edit-product-image-upload"
                     className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-white/10 rounded-xl text-slate-900 dark:text-white w-full p-2 text-xs"
                     onChange={(e) => handleImageUpload(e, true)}
                     disabled={isUploading}
                   />
                   {isUploading && <span className="text-xs text-brand-400">Yuklanmoqda...</span>}
                   {editImagePreview && (
-                    <div className="relative inline-block h-20 w-20">
+                    <div className="relative mt-2" style={{display:'inline-block', width:'96px', height:'96px'}}>
                       <img 
-                        src={editImagePreview.startsWith('data:') ? editImagePreview : (getImageUrl(editImagePreview) || undefined)} 
-                        alt="Preview" 
-                        className="h-20 w-20 object-cover rounded-lg border border-slate-200 dark:border-white/10" 
+                        src={editImagePreview.startsWith('blob:') ? editImagePreview : (getImageUrl(editImagePreview) || editImagePreview)}
+                        alt="Edit Preview" 
+                        style={{width:'100%', height:'100%', objectFit:'cover', borderRadius:'12px', display:'block', border:'1px solid #334155'}}
                         onError={(e) => {
-                          if (!editImagePreview.startsWith('data:') && !getImageUrl(editImagePreview)) {
-                            e.target.onerror = null;
-                            e.target.src = fallbackImage;
-                          } else {
-                            e.target.onerror = null;
-                            e.target.src = fallbackImage;
-                          }
+                          e.target.onerror = null;
+                          e.target.src = fallbackImage;
                         }}
                       />
                       <button 
@@ -1202,10 +1197,13 @@ export const InventoryPage = () => {
                           setEditImagePreview('');
                           setEditImageFile(null);
                           setEditRemoveImage(true);
+                          const input = document.getElementById('edit-product-image-upload');
+                          if (input) input.value = '';
                         }}
-                        className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-1 shadow hover:bg-red-600 z-10"
+                        style={{position:'absolute', top:'-8px', right:'-8px', background:'#ef4444', border:'none', borderRadius:'50%', width:'22px', height:'22px', display:'flex', alignItems:'center', justifyContent:'center', cursor:'pointer', zIndex:10, color:'white'}}
+                        title="Rasmni o'chirish"
                       >
-                        <X size={12} />
+                        <X size={13} />
                       </button>
                     </div>
                   )}

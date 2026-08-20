@@ -29,15 +29,15 @@ export const fallbackImage = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org
 export const getImageUrl = (imagePath) => {
   if (!imagePath || typeof imagePath !== 'string') return null;
   
-  // Agar to'liq URL bo'lsa (http/https), to'g'ridan-to'g'ri qaytar
+  // Agar to'liq URL bo'lsa (S3 yoki boshqa http/https) — to'g'ridan-to'g'ri qaytaramiz
   if (imagePath.startsWith('http://') || imagePath.startsWith('https://')) {
     return imagePath;
   }
 
-  // Asosiy Backend domeni (Railway)
+  // Eski disk fayllariga fallback (localhost yoki Railway backend)
   const BASE_BACKEND_URL = import.meta.env?.VITE_API_BASE_URL 
     ? import.meta.env.VITE_API_BASE_URL.replace(/\/api\/v1\/?$/, '').replace(/\/+$/, '')
-    : 'https://sweetflow-backend-production.up.railway.app';
+    : 'http://localhost:5000';
 
   // Path boshidagi ortiqcha / yoki uploads/ so'zlarini tozalash
   const cleanPath = imagePath.replace(/^\/+/, '').replace(/^uploads\//, '');

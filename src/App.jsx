@@ -7,7 +7,8 @@ import { InventoryPage } from './pages/InventoryPage';
 import { AnalyticsPage } from './pages/AnalyticsPage';
 import { UsersPage } from './pages/UsersPage';
 import { Login } from './pages/Login';
-import { ShoppingCart, Users, Layers, Award, BarChart3, Download, Maximize2, Minimize2, LogOut, UserCog, KeyRound, X, Eye, EyeOff, Moon, Sun } from 'lucide-react';
+import { ShoppingCart, Users, Layers, Award, BarChart3, Download, Maximize2, Minimize2, LogOut, UserCog, KeyRound, X, Eye, EyeOff, Moon, Sun, Trash2 } from 'lucide-react';
+import TrashModal from './components/TrashModal';
 import api from './services/api';
 import { ThemeProvider, useTheme } from './context/ThemeContext';
 
@@ -17,6 +18,7 @@ function AppContent({ userRole, username, handleLogout, isInstalled, handleInsta
   
   // Password change modal
   const [isPasswordModalOpen, setIsPasswordModalOpen] = useState(false);
+  const [isTrashModalOpen, setIsTrashModalOpen] = useState(false);
   const [currentPassword, setCurrentPassword] = useState('');
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
@@ -173,6 +175,12 @@ function AppContent({ userRole, username, handleLogout, isInstalled, handleInsta
                 {themeMode === 'dark' ? <Sun size={16} /> : <Moon size={16} />}
               </button>
               <button
+                onClick={() => setIsTrashModalOpen(true)}
+                className="w-8 h-8 flex items-center justify-center bg-slate-100 dark:bg-slate-900/60 hover:bg-slate-200 dark:hover:bg-slate-800/80 text-slate-600 dark:text-gray-300 hover:text-slate-900 dark:hover:text-white rounded-lg transition border border-slate-200 dark:border-slate-700/50 shadow-sm cursor-pointer"
+              >
+                <Trash2 size={16} />
+              </button>
+              <button
                 onClick={() => setIsPasswordModalOpen(true)}
                 className="w-8 h-8 flex items-center justify-center bg-slate-100 dark:bg-slate-900/60 hover:bg-slate-200 dark:hover:bg-slate-800/80 text-slate-600 dark:text-gray-300 hover:text-slate-900 dark:hover:text-white rounded-lg transition border border-slate-200 dark:border-slate-700/50 shadow-sm cursor-pointer"
               >
@@ -229,6 +237,14 @@ function AppContent({ userRole, username, handleLogout, isInstalled, handleInsta
               title={themeMode === 'dark' ? "Yorug' rejim" : "Qorong'i rejim"}
             >
               {themeMode === 'dark' ? <Sun size={20} /> : <Moon size={20} />}
+            </button>
+
+            <button
+              onClick={() => setIsTrashModalOpen(true)}
+              className="w-10 h-10 flex items-center justify-center bg-slate-100 dark:bg-slate-900/60 hover:bg-slate-200 dark:hover:bg-slate-800/80 text-slate-600 dark:text-gray-300 hover:text-slate-900 dark:hover:text-white rounded-xl transition border border-slate-200 dark:border-slate-700/50 hover:border-slate-300 dark:hover:border-slate-600 shadow-sm cursor-pointer"
+              title="Chiqindilar qutisi"
+            >
+              <Trash2 size={20} />
             </button>
 
             <button
@@ -366,6 +382,11 @@ function AppContent({ userRole, username, handleLogout, isInstalled, handleInsta
           </div>
         </div>
       )}
+      {/* Trash Modal */}
+      <TrashModal
+        isOpen={isTrashModalOpen}
+        onClose={() => setIsTrashModalOpen(false)}
+      />
     </div>
   );
 }

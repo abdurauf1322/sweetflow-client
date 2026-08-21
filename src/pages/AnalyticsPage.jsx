@@ -691,7 +691,10 @@ export const AnalyticsPage = () => {
                         <td colSpan="5" className="p-6 text-center text-slate-500 dark:text-gray-500">Tanlangan davrda qarz to'lovlari mavjud emas</td>
                       </tr>
                     ) : (
-                      report.debtPayments.map((payment, idx) => (
+                      report.debtPayments.filter(payment => {
+                        const note = (payment.note || '').toLowerCase();
+                        return !note.includes('chegirma') && !note.includes('qarzdan kechish') && !note.includes('qarzdankechish') && payment.paymentMethod !== 'DISCOUNT';
+                      }).map((payment, idx) => (
                         <tr key={payment.id} className="hover:bg-white/[0.01]">
                           <td className="p-3 font-semibold text-slate-900 dark:text-white flex items-center space-x-2">
                             <span className="text-[10px] text-slate-500 dark:text-gray-500 font-mono w-4">#{idx+1}</span>

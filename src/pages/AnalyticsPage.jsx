@@ -666,6 +666,61 @@ export const AnalyticsPage = () => {
                 </table>
               </div>
             </div>
+
+            {/* Debt Payments (Qarz To'lovlari) */}
+            <div className="glass-panel rounded-2xl p-5 border border-slate-200 dark:border-white/5 flex flex-col space-y-4 md:col-span-2 mt-6 lg:mt-0 xl:col-span-2">
+              <div className="flex items-center space-x-2 pb-3 border-b border-slate-200 dark:border-white/5">
+                <Wallet size={18} className="text-brand-400" />
+                <h3 className="font-bold text-slate-900 dark:text-white text-sm">💳 So'nggi Qarz To'lovlari (Undirilgan Nasiyalar)</h3>
+              </div>
+
+              <div className="overflow-x-auto">
+                <table className="w-full text-left border-collapse text-xs text-slate-700 dark:text-gray-300">
+                  <thead>
+                    <tr className="border-b border-slate-200 dark:border-white/5 bg-slate-50/30 dark:bg-slate-950/30 text-slate-500 dark:text-gray-400 uppercase font-semibold">
+                      <th className="p-3"># Do'kon nomi</th>
+                      <th className="p-3 text-center">To'lov Usuli</th>
+                      <th className="p-3 text-right">To'langan Summa</th>
+                      <th className="p-3 text-right">Qolgan Qarz</th>
+                      <th className="p-3 text-right">Sana va Vaqt</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-slate-200 dark:divide-white/5">
+                    {!report?.debtPayments || report.debtPayments.length === 0 ? (
+                      <tr>
+                        <td colSpan="5" className="p-6 text-center text-slate-500 dark:text-gray-500">Tanlangan davrda qarz to'lovlari mavjud emas</td>
+                      </tr>
+                    ) : (
+                      report.debtPayments.map((payment, idx) => (
+                        <tr key={payment.id} className="hover:bg-white/[0.01]">
+                          <td className="p-3 font-semibold text-slate-900 dark:text-white flex items-center space-x-2">
+                            <span className="text-[10px] text-slate-500 dark:text-gray-500 font-mono w-4">#{idx+1}</span>
+                            <div>
+                              <div>{payment.store?.name || 'Noma\'lum'}</div>
+                              <div className="text-[10px] text-slate-500 dark:text-gray-500 font-normal">{payment.store?.ownerName || ''}</div>
+                            </div>
+                          </td>
+                          <td className="p-3 text-center">
+                            <span className={`px-2 py-1 rounded-full text-[10px] font-bold ${payment.paymentMethod === 'CASH' ? 'bg-emerald-500/10 text-emerald-500' : 'bg-blue-500/10 text-blue-500'}`}>
+                              {payment.paymentMethod === 'CASH' ? 'Naqd' : 'Karta'}
+                            </span>
+                          </td>
+                          <td className="p-3 text-right text-emerald-400 font-bold font-mono">
+                            + {formatCurrency(payment.amount)}
+                          </td>
+                          <td className="p-3 text-right text-red-400 font-mono">
+                            {formatCurrency(payment.store?.currentDebt || 0)}
+                          </td>
+                          <td className="p-3 text-right text-slate-500 dark:text-gray-400 font-mono text-[10px]">
+                            {new Date(payment.createdAt).toLocaleString('ru-RU')}
+                          </td>
+                        </tr>
+                      ))
+                    )}
+                  </tbody>
+                </table>
+              </div>
+            </div>
           </div>
         </div>
       )}

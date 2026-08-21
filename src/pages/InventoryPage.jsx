@@ -5,6 +5,8 @@ import { formatNumberWithSpaces, parseNumberFromSpaces, getImageUrl, fallbackIma
 
 import { Search, Plus, Tag, Box, AlertTriangle, Layers, X, ClipboardList, Trash2, Pencil, DollarSign } from 'lucide-react';
 import toast from 'react-hot-toast';
+import imageCompression from 'browser-image-compression';
+import heic2any from 'heic2any';
 
 export const InventoryPage = () => {
   const { products, fetchProducts, addProduct, deleteProduct, updateProduct } = useProducts();
@@ -67,13 +69,41 @@ export const InventoryPage = () => {
   const isBoss = (localStorage.getItem('role') || '').toUpperCase() === 'BOSS';
   const isManager = (localStorage.getItem('role') || '').toUpperCase() === 'MANAGER';
 
-  const handleImageUpload = (e, isEdit = false) => {
-    const file = e.target.files[0];
+  const handleImageUpload = async (e, isEdit = false) => {
+    let file = e.target.files[0];
     if (file) {
+      try {
+        if (file.type === 'image/heic' || file.type === 'image/heif' || file.name.toLowerCase().endsWith('.heic') || file.name.toLowerCase().endsWith('.heif')) {
+          const blob = await heic2any({ blob: file, toType: 'image/jpeg' });
+          file = new File([blob], file.name.replace(/\.heic|\.heif/i, '.jpg'), { type: 'image/jpeg' });
+        }
+        
+        if (file.size > 1024 * 1024 || file.type !== 'image/jpeg') {
+          const options = {
+            maxSizeMB: 1,
+            maxWidthOrHeight: 1024,
+            useWebWorker: true,
+            fileType: 'image/jpeg'
+          };
+          const compressedBlob = await imageCompression(file, options);
+          file = new File([compressedBlob], file.name.replace(/\.[^/.]+$/, ".jpg"), { type: 'image/jpeg' });
+        }
+      } catch (error) {
+        console.error('Image processing error:', error);
+        toast.error("Rasm formatini o'zgartirishda xatolik yuz berdi");
+        return;
+      }
+
       if (isEdit) {
+        if (editImagePreview && editImagePreview.startsWith('blob:')) {
+          URL.revokeObjectURL(editImagePreview);
+        }
         setEditImageFile(file);
         setEditImagePreview(URL.createObjectURL(file));
       } else {
+        if (imagePreview && imagePreview.startsWith('blob:')) {
+          URL.revokeObjectURL(imagePreview);
+        }
         setImageFile(file);
         setImagePreview(URL.createObjectURL(file));
       }
@@ -281,7 +311,10 @@ export const InventoryPage = () => {
     setEditStockPieces(0);
     setEditStockBoxes(0);
     
-    setEditImagePreview(typeof product.imageUrl === 'string' ? product.imageUrl : '');
+    const API_BASE_URL = import.meta.env?.VITE_API_URL || process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
+    const fullImageUrl = product.imageUrl ? (product.imageUrl.startsWith('http') ? product.imageUrl : `${API_BASE_URL}${product.imageUrl.startsWith('/') ? '' : '/'}${product.imageUrl}`) : '';
+    
+    setEditImagePreview(fullImageUrl);
     setEditImageFile(null);
     setEditRemoveImage(false);
     setEditPaymentType('CASH');
@@ -884,7 +917,7 @@ export const InventoryPage = () => {
                   {!imagePreview && (
                     <input
                       type="file"
-                      accept="image/*,image/jpeg,image/png"
+                      accept="image/*"
                       id="product-image-upload"
                       className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-white/10 rounded-xl text-slate-900 dark:text-white w-full p-2 text-xs"
                       onChange={(e) => handleImageUpload(e, false)}
@@ -1173,7 +1206,7 @@ export const InventoryPage = () => {
                 <div className="flex flex-col space-y-2">
                   <input
                     type="file"
-                    accept="image/*,image/jpeg,image/png"
+                    accept="image/*"
                     id="edit-product-image-upload"
                     className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-white/10 rounded-xl text-slate-900 dark:text-white w-full p-2 text-xs"
                     onChange={(e) => handleImageUpload(e, true)}

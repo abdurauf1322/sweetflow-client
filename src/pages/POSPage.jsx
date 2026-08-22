@@ -80,11 +80,8 @@ export const POSPage = () => {
     if (existingItem) {
       updateCartItemQuantity(product.id, existingItem.quantity + 1);
     } else {
-      // Verify if we have at least 1 box in stock
-      if (product.quantityInBox > product.stockCount) {
-        toast.error(`Zaxira yetarli emas! 1 quti uchun kamida ${product.quantityInBox} dona bo'lishi kerak. Omborda faqat ${product.stockCount} dona bor.`);
-        return;
-      }
+      const hasFullBox = product.stockCount >= product.quantityInBox;
+      const defaultUnitType = hasFullBox ? 'BOX' : 'PIECE';
 
       setCart((prev) => [
         ...prev,
@@ -98,7 +95,7 @@ export const POSPage = () => {
           quantityInBox: product.quantityInBox,
           stockCount: product.stockCount,
           quantity: 1,
-          unitType: 'BOX', // default to BOX
+          unitType: defaultUnitType,
           imageUrl: product.imageUrl,
         }
       ]);
@@ -125,7 +122,19 @@ export const POSPage = () => {
           return item;
         }
 
-        return { ...item, quantity: qty };
+        let newUnitType = item.unitType;
+        let newQty = qty;
+
+        // Auto-convert pieces to box if it hits exact multiple of box and we have enough stock for it
+        if (item.unitType === 'PIECE' && qty >= item.quantityInBox && qty % item.quantityInBox === 0) {
+          if (item.stockCount >= qty) {
+            newUnitType = 'BOX';
+            newQty = Math.floor(qty / item.quantityInBox);
+            toast.success(`Avtomatik qutiga o'girildi`, { icon: '📦' });
+          }
+        }
+
+        return { ...item, quantity: newQty, unitType: newUnitType };
       })
     );
   };
@@ -431,7 +440,8 @@ export const POSPage = () => {
                       <button
                         type="button"
                         onClick={() => toggleUnitType(item.productId, 'BOX')}
-                        className={`px-2.5 py-1.5 rounded-md flex items-center space-x-1 transition ${item.unitType === 'BOX' ? 'bg-brand-500 text-white font-bold border-brand-400 shadow-sm' : 'text-slate-500 dark:text-gray-400 border-transparent hover:text-slate-700 dark:hover:text-gray-200'}`}
+                        disabled={item.stockCount < item.quantityInBox}
+                        className={`px-2.5 py-1.5 rounded-md flex items-center space-x-1 transition ${item.stockCount < item.quantityInBox ? 'opacity-30 cursor-not-allowed' : ''} ${item.unitType === 'BOX' ? 'bg-brand-500 text-white font-bold border-brand-400 shadow-sm' : 'text-slate-500 dark:text-gray-400 border-transparent hover:text-slate-700 dark:hover:text-gray-200'}`}
                       >
                         <Box size={14} />
                         <span className="text-xs">Quti</span>

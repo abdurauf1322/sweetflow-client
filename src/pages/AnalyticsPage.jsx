@@ -14,6 +14,10 @@ export const AnalyticsPage = () => {
   const [isExpensesHistoryModalOpen, setIsExpensesHistoryModalOpen] = useState(false);
   const [isPurchaseHistoryModalOpen, setIsPurchaseHistoryModalOpen] = useState(false);
   const [isSupplierDebtsModalOpen, setIsSupplierDebtsModalOpen] = useState(false);
+  const [isSupplierPaymentModalOpen, setIsSupplierPaymentModalOpen] = useState(false);
+  const [selectedSupplierForPayment, setSelectedSupplierForPayment] = useState(null);
+  const [supplierPaymentAmount, setSupplierPaymentAmount] = useState('');
+  const [isSubmittingSupplierPayment, setIsSubmittingSupplierPayment] = useState(false);
   const [isDebtStoresModalOpen, setIsDebtStoresModalOpen] = useState(false);
   
   // Expense states
@@ -89,6 +93,40 @@ export const AnalyticsPage = () => {
     setIsPurchasePaymentModalOpen(true);
   };
 
+  const handleSupplierPaymentSubmit = async (e) => {
+    e.preventDefault();
+    if (!selectedSupplierForPayment) return;
+    const rawAmount = parseNumberFromSpaces(supplierPaymentAmount);
+    if (!rawAmount || rawAmount <= 0) {
+      toast.error('Iltimos, to\'g\'ri summa kiriting');
+      return;
+    }
+    
+    if (rawAmount > selectedSupplierForPayment.totalDebt) {
+      toast.error('Kiritilgan summa qoldiq qarzdan ko\'p bo\'lishi mumkin emas');
+      return;
+    }
+
+    setIsSubmittingSupplierPayment(true);
+    try {
+      await api.post(`/suppliers/${selectedSupplierForPayment.id}/pay`, { amount: rawAmount });
+      toast.success('Ta\'minotchi qarzi to\'lovi muvaffaqiyatli saqlandi');
+      setIsSupplierPaymentModalOpen(false);
+      fetchSupplierDebts();
+      fetchReport(true);
+    } catch (err) {
+      toast.error(err.response?.data?.message || 'Xatolik yuz berdi');
+    } finally {
+      setIsSubmittingSupplierPayment(false);
+    }
+  };
+
+  const openSupplierPaymentModal = (supplier) => {
+    setSelectedSupplierForPayment(supplier);
+    setSupplierPaymentAmount('');
+    setIsSupplierPaymentModalOpen(true);
+  };
+
   useEffect(() => {
     fetchReport();
     
@@ -117,10 +155,10 @@ export const AnalyticsPage = () => {
   const fetchSupplierDebts = async () => {
     setLoadingSupplierDebts(true);
     try {
-      const response = await api.get('/purchases', {
-        params: { period, type: 'debt', _t: Date.now() },
+      const response = await api.get('/suppliers/debts', {
+        params: { period, _t: Date.now() },
       });
-      setSupplierDebts(response.data.data.purchases);
+      setSupplierDebts(response.data);
     } catch (err) {
       toast.error('Ta\'minotchi qarzlarini yuklashda xatolik yuz berdi');
     } finally {
@@ -1168,46 +1206,30 @@ export const AnalyticsPage = () => {
               <table className="w-full text-left border-collapse text-xs sm:text-sm">
                 <thead>
                   <tr className="bg-white/80 dark:bg-slate-900/80 text-slate-500 dark:text-gray-400 uppercase tracking-wider font-semibold border-b border-slate-200 dark:border-white/5 sticky top-0 backdrop-blur-md">
-                    <th className="min-w-[100px] whitespace-nowrap text-[10px] sm:text-xs py-2.5 px-3">Sana</th>
                     <th className="min-w-[100px] whitespace-nowrap text-[10px] sm:text-xs py-2.5 px-3">Ta'minotchi / Postavshik</th>
-                    <th className="min-w-[100px] whitespace-nowrap text-[10px] sm:text-xs py-2.5 px-3">Mahsulot</th>
-                    <th className="min-w-[100px] whitespace-nowrap text-[10px] sm:text-xs py-2.5 px-3 text-right">Umumiy xarid qiymati</th>
-                    <th className="min-w-[100px] whitespace-nowrap text-[10px] sm:text-xs py-2.5 px-3 text-right">To'langan qismi</th>
-                    <th className="min-w-[100px] whitespace-nowrap text-[10px] sm:text-xs py-2.5 px-3 text-right">Qolgan Qarzimiz</th>
+                    <th className="min-w-[100px] whitespace-nowrap text-[10px] sm:text-xs py-2.5 px-3">Tafsilot</th>
+                    <th className="min-w-[100px] whitespace-nowrap text-[10px] sm:text-xs py-2.5 px-3 text-right">Umumiy Qarzimiz</th>
                     <th className="min-w-[100px] whitespace-nowrap text-[10px] sm:text-xs py-2.5 px-3 text-center">Amal</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-200 dark:divide-white/5">
                   {loadingSupplierDebts ? (
-                    <tr><td colSpan="7" className="py-8 px-4 text-center text-xs sm:text-sm text-slate-400 whitespace-normal">Yuklanmoqda...</td></tr>
+                    <tr><td colSpan="4" className="py-8 px-4 text-center text-xs sm:text-sm text-slate-400 whitespace-normal">Yuklanmoqda...</td></tr>
                   ) : !supplierDebts || supplierDebts.length === 0 ? (
-                    <tr><td colSpan="7" className="py-8 px-4 text-center text-xs sm:text-sm text-slate-400 whitespace-normal">Bu davrda nasiyaga olingan tovarlar mavjud emas.</td></tr>
+                    <tr><td colSpan="4" className="py-8 px-4 text-center text-xs sm:text-sm text-slate-400 whitespace-normal">Hozirda ta'minotchilardan qarzlarimiz mavjud emas.</td></tr>
                   ) : (
-                    supplierDebts.map((hist, idx) => {
-                      const debtAmount = hist.debtAmount || (Number(hist.totalCost) - Number(hist.paidAmount || 0));
+                    supplierDebts.map((supplier, idx) => {
                       return (
-                      <tr key={hist.id || idx} className="hover:bg-white/[0.02] transition">
-                        <td className="min-w-[100px] whitespace-nowrap text-xs sm:text-sm py-2.5 px-3 text-slate-700 dark:text-gray-300 font-mono whitespace-nowrap"><Clock size={14} className="inline mr-2 text-slate-500 dark:text-gray-500" />{new Date(hist.createdAt).toLocaleDateString('ru-RU')}</td>
-                        <td className="min-w-[100px] whitespace-nowrap text-xs sm:text-sm py-2.5 px-3 text-slate-900 dark:text-white font-medium">{hist.supplierName || 'Noma\'lum'}</td>
-                        <td className="min-w-[100px] whitespace-nowrap text-xs sm:text-sm py-2.5 px-3 text-slate-700 dark:text-gray-300">
-                          <div className="font-medium text-slate-900 dark:text-white">{hist.product?.name || 'Noma\'lum'}</div>
-                          <div className="text-[10px] mt-0.5">
-                            {hist.addedBoxes > 0 && `${hist.addedBoxes} quti`}
-                            {hist.addedBoxes > 0 && hist.addedPieces > 0 && ' + '}
-                            {hist.addedPieces > 0 && `${hist.addedPieces} dona`}
-                          </div>
-                        </td>
-                        <td className="min-w-[100px] whitespace-nowrap text-xs sm:text-sm py-2.5 px-3 text-right text-slate-700 dark:text-gray-300 font-mono">
-                          {formatCurrency(hist.totalCost)}
-                        </td>
-                        <td className="min-w-[100px] whitespace-nowrap text-xs sm:text-sm py-2.5 px-3 text-right text-emerald-500 font-mono">
-                          {formatCurrency(hist.paidAmount || 0)}
+                      <tr key={supplier.id || idx} className="hover:bg-white/[0.02] transition">
+                        <td className="min-w-[100px] whitespace-nowrap text-xs sm:text-sm py-2.5 px-3 text-slate-900 dark:text-white font-medium">{supplier.name}</td>
+                        <td className="min-w-[100px] whitespace-nowrap text-xs sm:text-sm py-2.5 px-3 text-slate-700 dark:text-gray-300 font-mono">
+                          {supplier.products?.length || 0} ta mahsulot qarzi
                         </td>
                         <td className="min-w-[120px] whitespace-nowrap text-xs sm:text-sm py-2.5 px-3 text-right text-red-500 font-black tracking-tight whitespace-nowrap">
-                          {formatCurrency(debtAmount)}
+                          {formatCurrency(supplier.totalDebt)}
                         </td>
                         <td className="min-w-[100px] whitespace-nowrap text-xs sm:text-sm py-2.5 px-3 text-center">
-                          <button onClick={() => openPurchasePaymentModal(hist)} className="bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-500 border border-emerald-500/30 px-3 py-1.5 rounded-lg flex items-center justify-center text-xs transition font-bold active:scale-95 w-full mx-auto cursor-pointer">
+                          <button onClick={() => openSupplierPaymentModal(supplier)} className="bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-500 border border-emerald-500/30 px-3 py-1.5 rounded-lg flex items-center justify-center text-xs transition font-bold active:scale-95 w-full mx-auto cursor-pointer">
                             <Wallet size={14} className="mr-1.5" /> Qarzni To'lash
                           </button>
                         </td>
@@ -1217,6 +1239,62 @@ export const AnalyticsPage = () => {
                 </tbody>
               </table>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* Supplier Payment Modal */}
+      {isSupplierPaymentModalOpen && selectedSupplierForPayment && (
+        <div className="fixed inset-0 z-[110] flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm animate-fade-in">
+          <div className="glass-panel border border-slate-200 dark:border-white/10 w-full max-w-sm rounded-2xl shadow-2xl p-6 relative animate-slide-up">
+            <h3 className="text-lg font-bold text-slate-900 dark:text-white mb-4 border-b border-slate-200 dark:border-white/10 pb-2">
+              Ta'minotchiga qarz to'lash
+            </h3>
+            
+            <div className="mb-4 bg-slate-50 dark:bg-slate-900/50 p-3 rounded-xl border border-slate-200 dark:border-white/5 space-y-1.5">
+              <div className="flex justify-between text-xs sm:text-sm">
+                <span className="text-slate-500 dark:text-gray-400">Ta'minotchi:</span>
+                <span className="font-semibold text-slate-900 dark:text-white text-right break-all ml-4">{selectedSupplierForPayment.name}</span>
+              </div>
+              <div className="flex justify-between text-xs sm:text-sm border-t border-slate-200 dark:border-white/5 pt-1.5">
+                <span className="text-slate-500 dark:text-gray-400">Jami qarz:</span>
+                <span className="font-mono font-bold text-red-500">{formatCurrency(selectedSupplierForPayment.totalDebt)}</span>
+              </div>
+            </div>
+
+            <form onSubmit={handleSupplierPaymentSubmit} className="space-y-4">
+              <div>
+                <label className="text-xs text-slate-500 dark:text-gray-400 block mb-1 font-semibold uppercase tracking-wider">To'lov summasi (Naqd)</label>
+                <div className="relative">
+                  <input
+                    type="text"
+                    required
+                    value={supplierPaymentAmount}
+                    onChange={(e) => setSupplierPaymentAmount(formatNumberWithSpaces(e.target.value))}
+                    className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-white/10 rounded-xl text-slate-900 dark:text-white w-full p-3 pl-10 text-lg font-bold focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition"
+                    placeholder="0"
+                  />
+                  <DollarSign size={18} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" />
+                </div>
+              </div>
+              
+              <div className="flex gap-3 pt-2">
+                <button
+                  type="button"
+                  onClick={() => setIsSupplierPaymentModalOpen(false)}
+                  className="flex-1 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-white px-4 py-3 rounded-xl text-sm font-bold transition active:scale-95"
+                >
+                  Bekor qilish
+                </button>
+                <button
+                  type="submit"
+                  disabled={isSubmittingSupplierPayment}
+                  className="flex-1 bg-emerald-500 hover:bg-emerald-600 text-white px-4 py-3 rounded-xl text-sm font-bold transition flex items-center justify-center disabled:opacity-50 active:scale-95 shadow-lg shadow-emerald-500/30"
+                >
+                  {isSubmittingSupplierPayment ? 'Saqlanmoqda...' : 'To\'lash'}
+                </button>
+              </div>
+            </form>
           </div>
         </div>
       )}

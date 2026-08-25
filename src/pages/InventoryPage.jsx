@@ -26,6 +26,16 @@ export const InventoryPage = () => {
   const [newEditCategoryName, setNewEditCategoryName] = useState('');
   const [isCreatingEditCategory, setIsCreatingEditCategory] = useState(false);
 
+  // Supplier addition states
+  const [suppliers, setSuppliers] = useState([]);
+  const [showAddSupplierInline, setShowAddSupplierInline] = useState(false);
+  const [newSupplierName, setNewSupplierName] = useState('');
+  const [isCreatingSupplier, setIsCreatingSupplier] = useState(false);
+  
+  const [showEditSupplierInline, setShowEditSupplierInline] = useState(false);
+  const [newEditSupplierName, setNewEditSupplierName] = useState('');
+  const [isCreatingEditSupplier, setIsCreatingEditSupplier] = useState(false);
+
 
   // Add Form states
   const [name, setName] = useState('');
@@ -40,7 +50,7 @@ export const InventoryPage = () => {
   const [imagePreview, setImagePreview] = useState('');
   const [imageFile, setImageFile] = useState(null);
   const [paymentType, setPaymentType] = useState('CASH');
-  const [supplierName, setSupplierName] = useState('');
+  const [supplierId, setSupplierId] = useState('');
   const [paidAmount, setPaidAmount] = useState('');
 
   // Edit Form states
@@ -58,7 +68,7 @@ export const InventoryPage = () => {
   const [editRemoveImage, setEditRemoveImage] = useState(false);
   const [editImageFile, setEditImageFile] = useState(null);
   const [editPaymentType, setEditPaymentType] = useState('CASH');
-  const [editSupplierName, setEditSupplierName] = useState('');
+  const [editSupplierId, setEditSupplierId] = useState('');
   const [editPaidAmount, setEditPaidAmount] = useState('');
   const [isUploading, setIsUploading] = useState(false);
   // Expense states
@@ -154,6 +164,7 @@ export const InventoryPage = () => {
   useEffect(() => {
     fetchProducts();
     loadCategories();
+    loadSuppliers();
   }, [fetchProducts]);
 
   const loadCategories = async () => {
@@ -166,6 +177,16 @@ export const InventoryPage = () => {
         { id: 'mock-chocolate-uuid', name: 'Shokoladlar' },
         { id: 'mock-sweet-uuid', name: 'Marmeladlar' }
       ]);
+    }
+  };
+
+  const loadSuppliers = async () => {
+    try {
+      const response = await api.get('/suppliers');
+      setSuppliers(response.data);
+    } catch (err) {
+      console.error(err);
+      setSuppliers([]);
     }
   };
 
@@ -225,6 +246,50 @@ export const InventoryPage = () => {
     }
   };
 
+  const handleCreateSupplier = async (e) => {
+    e.preventDefault();
+    if (!newSupplierName.trim()) {
+      toast.error("Ta'minotchi nomini kiriting!");
+      return;
+    }
+    setIsCreatingSupplier(true);
+    try {
+      const response = await api.post('/suppliers', { name: newSupplierName.trim() });
+      const newSup = response.data;
+      setSuppliers(prev => [...prev, newSup].sort((a, b) => a.name.localeCompare(b.name)));
+      setSupplierId(newSup.id);
+      setNewSupplierName('');
+      setShowAddSupplierInline(false);
+      toast.success("Ta'minotchi muvaffaqiyatli qo'shildi!");
+    } catch (err) {
+      toast.error(`Xatolik: ${err.response?.data?.message || err.message}`);
+    } finally {
+      setIsCreatingSupplier(false);
+    }
+  };
+
+  const handleCreateEditSupplier = async (e) => {
+    e.preventDefault();
+    if (!newEditSupplierName.trim()) {
+      toast.error("Ta'minotchi nomini kiriting!");
+      return;
+    }
+    setIsCreatingEditSupplier(true);
+    try {
+      const response = await api.post('/suppliers', { name: newEditSupplierName.trim() });
+      const newSup = response.data;
+      setSuppliers(prev => [...prev, newSup].sort((a, b) => a.name.localeCompare(b.name)));
+      setEditSupplierId(newSup.id);
+      setNewEditSupplierName('');
+      setShowEditSupplierInline(false);
+      toast.success("Ta'minotchi muvaffaqiyatli qo'shildi!");
+    } catch (err) {
+      toast.error(`Xatolik: ${err.response?.data?.message || err.message}`);
+    } finally {
+      setIsCreatingEditSupplier(false);
+    }
+  };
+
 
   const handleRegisterProduct = async (e) => {
     e.preventDefault();
@@ -246,7 +311,7 @@ export const InventoryPage = () => {
     payload.append('boxes', Number(initialBoxes));
     payload.append('paymentType', paymentType);
     if (paymentType === 'DEBT') {
-      payload.append('supplierName', supplierName);
+      if (supplierId) payload.append('supplierId', supplierId);
       payload.append('paidAmount', parseNumberFromSpaces(paidAmount) || 0);
     }
     if (imageFile) {
@@ -268,7 +333,7 @@ export const InventoryPage = () => {
       setImagePreview('');
       setImageFile(null);
       setPaymentType('CASH');
-      setSupplierName('');
+      setSupplierId('');
       setPaidAmount('');
 
       setInitialBoxes(0);
@@ -318,7 +383,7 @@ export const InventoryPage = () => {
     setEditImageFile(null);
     setEditRemoveImage(false);
     setEditPaymentType('CASH');
-    setEditSupplierName('');
+    setEditSupplierId('');
     setEditPaidAmount('');
     setShowEditForm(true);
   };
@@ -345,7 +410,7 @@ export const InventoryPage = () => {
     payload.append('boxes', Number(editStockBoxes));
     payload.append('paymentType', editPaymentType);
     if (editPaymentType === 'DEBT') {
-      payload.append('supplierName', editSupplierName);
+      if (editSupplierId) payload.append('supplierId', editSupplierId);
       payload.append('paidAmount', parseNumberFromSpaces(editPaidAmount) || 0);
     }
     if (editImageFile) {
@@ -868,15 +933,59 @@ export const InventoryPage = () => {
                 {paymentType === 'DEBT' && (
                   <div className="space-y-3 mt-3 animate-fade-in">
                     <div className="space-y-1">
-                      <label className="text-[10px] sm:text-xs text-amber-600 dark:text-amber-500 block">Ta'minotchi / Postavshik nomi:</label>
-                      <input
-                        type="text"
-                        required
-                        placeholder="Masalan: MCHJ 'Sladosti', Akrom aka..."
-                        className="bg-white dark:bg-slate-900 border border-amber-200 dark:border-amber-500/30 rounded-xl text-slate-900 dark:text-white w-full p-2.5 focus:ring-amber-500 focus:border-amber-500 text-xs sm:text-sm"
-                        value={supplierName}
-                        onChange={(e) => setSupplierName(e.target.value)}
-                      />
+                      <label className="text-[10px] sm:text-xs text-amber-600 dark:text-amber-500 block">Ta'minotchi / Postavshik:</label>
+                      {!showAddSupplierInline ? (
+                        <div className="flex gap-2">
+                          <select
+                            required
+                            className="bg-white dark:bg-slate-900 border border-amber-200 dark:border-amber-500/30 rounded-xl text-slate-900 dark:text-white w-full p-2.5 focus:ring-amber-500 focus:border-amber-500 text-xs sm:text-sm"
+                            value={supplierId}
+                            onChange={(e) => setSupplierId(e.target.value)}
+                          >
+                            <option value="">Tanlang...</option>
+                            {suppliers.map(s => (
+                              <option key={s.id} value={s.id}>{s.name}</option>
+                            ))}
+                          </select>
+                          <button
+                            type="button"
+                            onClick={() => setShowAddSupplierInline(true)}
+                            className="bg-amber-100 hover:bg-amber-200 dark:bg-amber-500/20 dark:hover:bg-amber-500/30 text-amber-600 dark:text-amber-400 p-2.5 rounded-xl border border-amber-200 dark:border-amber-500/30 transition-colors flex items-center justify-center"
+                            title="Yangi qo'shish"
+                          >
+                            <Plus size={18} />
+                          </button>
+                        </div>
+                      ) : (
+                        <div className="flex gap-2">
+                          <input
+                            type="text"
+                            placeholder="Yangi nomi..."
+                            className="bg-white dark:bg-slate-900 border border-amber-200 dark:border-amber-500/30 rounded-xl text-slate-900 dark:text-white w-full p-2.5 focus:ring-amber-500 focus:border-amber-500 text-xs sm:text-sm"
+                            value={newSupplierName}
+                            onChange={(e) => setNewSupplierName(e.target.value)}
+                            autoFocus
+                          />
+                          <button
+                            type="button"
+                            onClick={handleCreateSupplier}
+                            disabled={isCreatingSupplier}
+                            className="bg-brand-500 hover:bg-brand-600 text-white px-3 py-2 rounded-xl text-xs sm:text-sm font-medium transition disabled:opacity-50"
+                          >
+                            {isCreatingSupplier ? '...' : 'Saqlash'}
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setShowAddSupplierInline(false);
+                              setNewSupplierName('');
+                            }}
+                            className="bg-slate-100 hover:bg-slate-200 dark:bg-white/10 dark:hover:bg-white/20 text-slate-700 dark:text-white px-3 py-2 rounded-xl text-xs sm:text-sm font-medium transition"
+                          >
+                            Bekor
+                          </button>
+                        </div>
+                      )}
                     </div>
                     <div className="space-y-1">
                       <label className="text-[10px] sm:text-xs text-amber-600 dark:text-amber-500 block">Boshlang'ich to'lov (Naqd berildi) (s.):</label>
@@ -1158,15 +1267,59 @@ export const InventoryPage = () => {
                 {editPaymentType === 'DEBT' && (
                   <div className="space-y-3 mt-3 animate-fade-in">
                     <div className="space-y-1">
-                      <label className="text-[10px] sm:text-xs text-amber-600 dark:text-amber-500 block">Ta'minotchi / Postavshik nomi:</label>
-                      <input
-                        type="text"
-                        required
-                        placeholder="Masalan: MCHJ 'Sladosti', Akrom aka..."
-                        className="bg-white dark:bg-slate-900 border border-amber-200 dark:border-amber-500/30 rounded-xl text-slate-900 dark:text-white w-full p-2.5 focus:ring-amber-500 focus:border-amber-500 text-xs sm:text-sm"
-                        value={editSupplierName}
-                        onChange={(e) => setEditSupplierName(e.target.value)}
-                      />
+                      <label className="text-[10px] sm:text-xs text-amber-600 dark:text-amber-500 block">Ta'minotchi / Postavshik:</label>
+                      {!showEditSupplierInline ? (
+                        <div className="flex gap-2">
+                          <select
+                            required
+                            className="bg-white dark:bg-slate-900 border border-amber-200 dark:border-amber-500/30 rounded-xl text-slate-900 dark:text-white w-full p-2.5 focus:ring-amber-500 focus:border-amber-500 text-xs sm:text-sm"
+                            value={editSupplierId}
+                            onChange={(e) => setEditSupplierId(e.target.value)}
+                          >
+                            <option value="">Tanlang...</option>
+                            {suppliers.map(s => (
+                              <option key={s.id} value={s.id}>{s.name}</option>
+                            ))}
+                          </select>
+                          <button
+                            type="button"
+                            onClick={() => setShowEditSupplierInline(true)}
+                            className="bg-amber-100 hover:bg-amber-200 dark:bg-amber-500/20 dark:hover:bg-amber-500/30 text-amber-600 dark:text-amber-400 p-2.5 rounded-xl border border-amber-200 dark:border-amber-500/30 transition-colors flex items-center justify-center"
+                            title="Yangi qo'shish"
+                          >
+                            <Plus size={18} />
+                          </button>
+                        </div>
+                      ) : (
+                        <div className="flex gap-2">
+                          <input
+                            type="text"
+                            placeholder="Yangi nomi..."
+                            className="bg-white dark:bg-slate-900 border border-amber-200 dark:border-amber-500/30 rounded-xl text-slate-900 dark:text-white w-full p-2.5 focus:ring-amber-500 focus:border-amber-500 text-xs sm:text-sm"
+                            value={newEditSupplierName}
+                            onChange={(e) => setNewEditSupplierName(e.target.value)}
+                            autoFocus
+                          />
+                          <button
+                            type="button"
+                            onClick={handleCreateEditSupplier}
+                            disabled={isCreatingEditSupplier}
+                            className="bg-brand-500 hover:bg-brand-600 text-white px-3 py-2 rounded-xl text-xs sm:text-sm font-medium transition disabled:opacity-50"
+                          >
+                            {isCreatingEditSupplier ? '...' : 'Saqlash'}
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setShowEditSupplierInline(false);
+                              setNewEditSupplierName('');
+                            }}
+                            className="bg-slate-100 hover:bg-slate-200 dark:bg-white/10 dark:hover:bg-white/20 text-slate-700 dark:text-white px-3 py-2 rounded-xl text-xs sm:text-sm font-medium transition"
+                          >
+                            Bekor
+                          </button>
+                        </div>
+                      )}
                     </div>
                     <div className="space-y-1">
                       <label className="text-[10px] sm:text-xs text-amber-600 dark:text-amber-500 block">Boshlang'ich to'lov (Naqd berildi) (s.):</label>

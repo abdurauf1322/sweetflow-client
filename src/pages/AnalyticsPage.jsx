@@ -898,9 +898,6 @@ export const AnalyticsPage = () => {
                           {hist.paymentType === 'DEBT' && !hist.isPaid && (
                             <div className="flex flex-col items-end mt-1 space-y-1">
                               <span className="text-[10px] text-red-400 font-bold bg-red-400/10 px-1.5 py-0.5 rounded">🔴 Qarzdorlik: {formatCurrency(hist.debtAmount || (Number(hist.totalCost) - Number(hist.paidAmount || 0)))}</span>
-                              <button onClick={() => openPurchasePaymentModal(hist)} className="bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-500 border border-emerald-500/30 px-2 py-1 rounded flex items-center text-[10px] transition font-bold active:scale-95">
-                                <Wallet size={12} className="mr-1" /> To'lov qilish
-                              </button>
                             </div>
                           )}
                         </td>
@@ -1199,7 +1196,7 @@ export const AnalyticsPage = () => {
               <div className="bg-red-500/20 w-10 h-10 min-w-[40px] rounded-xl flex items-center justify-center text-red-400 shrink-0"><AlertTriangle size={24} /></div>
               <div>
                 <h3 className="text-base sm:text-lg font-bold text-slate-900 dark:text-white leading-tight line-clamp-2">📦 Nasiyaga Olingan Tovar Qarzlarimiz (Ta'minotchilar)</h3>
-                <p className="text-xs text-slate-500 dark:text-gray-400 mt-0.5">{getPeriodLabel()} ({supplierDebts?.length || 0} ta yozuv)</p>
+                <p className="text-xs text-slate-500 dark:text-gray-400 mt-0.5">Barcha vaqt uchun ({supplierDebts?.length || 0} ta yozuv)</p>
               </div>
             </div>
             <div className="bg-slate-50/50 dark:bg-slate-950/50 rounded-2xl border border-slate-200 dark:border-white/5 overflow-x-auto w-full no-scrollbar flex-1 overflow-y-auto max-h-[70vh]">
@@ -1213,23 +1210,21 @@ export const AnalyticsPage = () => {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-200 dark:divide-white/5">
-                  {loadingSupplierDebts ? (
-                    <tr><td colSpan="4" className="py-8 px-4 text-center text-xs sm:text-sm text-slate-400 whitespace-normal">Yuklanmoqda...</td></tr>
-                  ) : !supplierDebts || supplierDebts.length === 0 ? (
+                  {!supplierDebts || supplierDebts.length === 0 ? (
                     <tr><td colSpan="4" className="py-8 px-4 text-center text-xs sm:text-sm text-slate-400 whitespace-normal">Hozirda ta'minotchilardan qarzlarimiz mavjud emas.</td></tr>
                   ) : (
-                    supplierDebts.map((supplier, idx) => {
+                    supplierDebts.map((hist, idx) => {
                       return (
-                      <tr key={supplier.id || idx} className="hover:bg-white/[0.02] transition">
-                        <td className="min-w-[100px] whitespace-nowrap text-xs sm:text-sm py-2.5 px-3 text-slate-900 dark:text-white font-medium">{supplier.name}</td>
+                      <tr key={hist.id || idx} className="hover:bg-white/[0.02] transition">
+                        <td className="min-w-[100px] whitespace-nowrap text-xs sm:text-sm py-2.5 px-3 text-slate-900 dark:text-white font-medium">{hist.supplierName || 'Noma\'lum ta\'minotchi'}</td>
                         <td className="min-w-[100px] whitespace-nowrap text-xs sm:text-sm py-2.5 px-3 text-slate-700 dark:text-gray-300 font-mono">
-                          {supplier.products?.length || 0} ta mahsulot qarzi
+                          {hist.product?.name || 'Mahsulot'} ({hist.addedBoxes > 0 ? `${hist.addedBoxes} quti ` : ''}{hist.addedPieces > 0 ? `${hist.addedPieces} dona` : ''})
                         </td>
                         <td className="min-w-[120px] whitespace-nowrap text-xs sm:text-sm py-2.5 px-3 text-right text-red-500 font-black tracking-tight whitespace-nowrap">
-                          {formatCurrency(supplier.totalDebt)}
+                          {formatCurrency(hist.debtAmount || (Number(hist.totalCost) - Number(hist.paidAmount || 0)))}
                         </td>
                         <td className="min-w-[100px] whitespace-nowrap text-xs sm:text-sm py-2.5 px-3 text-center">
-                          <button onClick={() => openSupplierPaymentModal(supplier)} className="bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-500 border border-emerald-500/30 px-3 py-1.5 rounded-lg flex items-center justify-center text-xs transition font-bold active:scale-95 w-full mx-auto cursor-pointer">
+                          <button onClick={() => { openPurchasePaymentModal(hist); }} className="bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-500 border border-emerald-500/30 px-3 py-1.5 rounded-lg flex items-center justify-center text-xs transition font-bold active:scale-95 w-full mx-auto cursor-pointer">
                             <Wallet size={14} className="mr-1.5" /> Qarzni To'lash
                           </button>
                         </td>

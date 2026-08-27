@@ -3,7 +3,7 @@ import { useProducts } from '../hooks/useProducts';
 import api from '../services/api';
 import { formatNumberWithSpaces, parseNumberFromSpaces, getImageUrl, fallbackImage } from '../utils/format';
 
-import { Search, Plus, Tag, Box, AlertTriangle, Layers, X, ClipboardList, Trash2, Pencil, DollarSign } from 'lucide-react';
+import { Search, Plus, Tag, Box, AlertTriangle, Layers, X, ClipboardList, Trash2, Pencil, DollarSign, History } from 'lucide-react';
 import toast from 'react-hot-toast';
 import imageCompression from 'browser-image-compression';
 import heic2any from 'heic2any';
@@ -78,6 +78,23 @@ export const InventoryPage = () => {
   const [addingExpense, setAddingExpense] = useState(false);
   const isBoss = (localStorage.getItem('role') || '').toUpperCase() === 'BOSS';
   const isManager = (localStorage.getItem('role') || '').toUpperCase() === 'MANAGER';
+
+  // History Modal states
+  const [showHistoryModal, setShowHistoryModal] = useState(false);
+  const [historyData, setHistoryData] = useState([]);
+  const [isLoadingHistory, setIsLoadingHistory] = useState(false);
+
+  const fetchHistory = async () => {
+    setIsLoadingHistory(true);
+    try {
+      const res = await api.get('/products/history');
+      setHistoryData(res.data.data.history);
+    } catch (err) {
+      toast.error('Kirim tarixini yuklashda xatolik');
+    } finally {
+      setIsLoadingHistory(false);
+    }
+  };
 
   const handleImageUpload = async (e, isEdit = false) => {
     let file = e.target.files[0];
@@ -501,6 +518,16 @@ export const InventoryPage = () => {
           >
             <AlertTriangle size={12} className="shrink-0" />
             <span>Kam Qolganlar ({lowStockProducts.length})</span>
+          </button>
+          <button
+            onClick={() => {
+              setShowHistoryModal(true);
+              fetchHistory();
+            }}
+            className="flex-1 md:flex-none text-center px-3 sm:px-4 py-2 sm:py-2 rounded-lg text-xs font-semibold transition flex items-center justify-center space-x-1.5 border min-h-[38px] text-slate-500 dark:text-gray-400 hover:text-slate-700 dark:text-gray-300 border-transparent hover:border-slate-200 dark:border-white/10"
+          >
+            <History size={12} className="shrink-0" />
+            <span>📦 Kirim Tarixi</span>
           </button>
         </div>
 
@@ -1463,7 +1490,92 @@ export const InventoryPage = () => {
             </form>
           </div>
         </div>
+      {/* Kirim Tarixi (History) Modal Overlay */}
+      {showHistoryModal && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm animate-fade-in overflow-y-auto">
+          <div className="glass-panel border border-slate-200 dark:border-white/10 w-full sm:max-w-4xl md:max-w-5xl rounded-2xl shadow-2xl p-4 sm:p-6 my-auto max-h-[90vh] flex flex-col relative overflow-hidden animate-slide-up">
+            <button
+              onClick={() => setShowHistoryModal(false)}
+              className="absolute top-4 right-4 text-slate-500 dark:text-gray-400 hover:text-slate-900 dark:text-white transition bg-slate-100 dark:bg-slate-800 p-2 rounded-xl z-10"
+            >
+              <X size={20} />
+            </button>
+            <h2 className="text-lg font-bold text-slate-900 dark:text-white mb-4 flex items-center space-x-2">
+              <History className="text-brand-400" />
+              <span>📦 Kirim Tarixi (Qabul qilingan tovarlar)</span>
+            </h2>
+
+            <div className="flex-1 overflow-auto min-h-0">
+              {isLoadingHistory ? (
+                <div className="flex justify-center items-center py-10">
+                  <div className="w-8 h-8 border-4 border-brand-500 border-t-transparent rounded-full animate-spin"></div>
+                </div>
+              ) : (
+                <table className="w-full text-left border-collapse text-xs">
+                  <thead className="sticky top-0 bg-slate-100 dark:bg-slate-900 z-10">
+                    <tr className="border-b border-slate-200 dark:border-white/5 text-slate-500 dark:text-gray-400 uppercase tracking-wider font-semibold">
+                      <th className="py-2.5 px-3">📅 Sana va Vaqt</th>
+                      <th className="py-2.5 px-3">🏷️ Mahsulot Nomi</th>
+                      <th className="py-2.5 px-3">🏢 Ta'minotchi</th>
+                      <th className="py-2.5 px-3">📦 Qo'shilgan Miqdor</th>
+                      <th className="py-2.5 px-3">💵 Kirim / Tannarxi</th>
+                      <th className="py-2.5 px-3">💰 Sotish Narxi</th>
+                      <th className="py-2.5 px-3">📝 Turi / Holati</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-slate-200 dark:divide-white/5 text-slate-700 dark:text-gray-300">
+                    {historyData.length === 0 ? (
+                      <tr>
+                        <td colSpan="7" className="py-8 px-4 text-center text-slate-400">
+                          Tarix topilmadi
+                        </td>
+                      </tr>
+                    ) : (
+                      historyData.map((item) => (
+                        <tr key={item.id} className="hover:bg-white/[0.02] transition">
+                          <td className="py-2.5 px-3 whitespace-nowrap">
+                            {new Date(item.createdAt).toLocaleString('uz-UZ')}
+                          </td>
+                          <td className="py-2.5 px-3 font-semibold text-slate-900 dark:text-white">
+                            {item.product?.name || 'O\'chirilgan'}
+                          </td>
+                          <td className="py-2.5 px-3">
+                            {item.supplierName || '-'}
+                          </td>
+                          <td className="py-2.5 px-3 font-mono">
+                            {item.addedBoxes > 0 && `${item.addedBoxes} quti `}
+                            {item.addedPieces > 0 && `${item.addedPieces} dona`}
+                            {item.addedBoxes === 0 && item.addedPieces === 0 && '-'}
+                          </td>
+                          <td className="py-2.5 px-3">
+                            <div className="text-[10px] text-slate-500">D: {Number(item.pieceCostPrice || 0).toLocaleString()} s.</div>
+                            <div>Q: {Number(item.boxCostPrice || 0).toLocaleString()} s.</div>
+                          </td>
+                          <td className="py-2.5 px-3 font-medium">
+                            <div className="text-[10px] text-slate-500">D: {Number(item.unitPrice || 0).toLocaleString()} s.</div>
+                            <div className="text-brand-300">Q: {Number(item.boxPrice || 0).toLocaleString()} s.</div>
+                          </td>
+                          <td className="py-2.5 px-3">
+                            <span className={`inline-block px-2 py-0.5 rounded-full font-bold text-[9px] uppercase border ${
+                              item.actionType === 'NEW_PRODUCT' ? 'bg-green-500/20 text-green-400 border-green-500/30' :
+                              item.actionType === 'ADD_STOCK' ? 'bg-blue-500/20 text-blue-400 border-blue-500/30' :
+                              'bg-gray-500/20 text-gray-400 border-gray-500/30'
+                            }`}>
+                              {item.actionType === 'NEW_PRODUCT' ? 'Yangi kirim' : 
+                               item.actionType === 'ADD_STOCK' ? 'Qo\'shimcha' : 'Sinxronizatsiya'}
+                            </span>
+                          </td>
+                        </tr>
+                      ))
+                    )}
+                  </tbody>
+                </table>
+              )}
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );
 };
+

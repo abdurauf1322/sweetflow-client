@@ -1490,6 +1490,8 @@ export const InventoryPage = () => {
             </form>
           </div>
         </div>
+      )}
+
       {/* Kirim Tarixi (History) Modal Overlay */}
       {showHistoryModal && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm animate-fade-in overflow-y-auto">

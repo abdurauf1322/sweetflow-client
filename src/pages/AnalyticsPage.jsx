@@ -39,6 +39,7 @@ export const AnalyticsPage = () => {
 
   const [supplierDebts, setSupplierDebts] = useState([]);
   const [loadingSupplierDebts, setLoadingSupplierDebts] = useState(false);
+  const [expandedSupplierId, setExpandedSupplierId] = useState(null);
   const isBoss = (localStorage.getItem('role') || '').toUpperCase() === 'BOSS';
 
   const handleUpdateBalanceSubmit = async (e) => {
@@ -1213,23 +1214,50 @@ export const AnalyticsPage = () => {
                   {!supplierDebts || supplierDebts.length === 0 ? (
                     <tr><td colSpan="4" className="py-8 px-4 text-center text-xs sm:text-sm text-slate-400 whitespace-normal">Hozirda ta'minotchilardan qarzlarimiz mavjud emas.</td></tr>
                   ) : (
-                    supplierDebts.map((hist, idx) => {
-                      return (
-                      <tr key={hist.id || idx} className="hover:bg-white/[0.02] transition">
-                        <td className="min-w-[100px] whitespace-nowrap text-xs sm:text-sm py-2.5 px-3 text-slate-900 dark:text-white font-medium">{hist.supplierName || 'Noma\'lum ta\'minotchi'}</td>
-                        <td className="min-w-[100px] whitespace-nowrap text-xs sm:text-sm py-2.5 px-3 text-slate-700 dark:text-gray-300 font-mono">
-                          {hist.product?.name || 'Mahsulot'} ({hist.addedBoxes > 0 ? `${hist.addedBoxes} quti ` : ''}{hist.addedPieces > 0 ? `${hist.addedPieces} dona` : ''})
-                        </td>
-                        <td className="min-w-[120px] whitespace-nowrap text-xs sm:text-sm py-2.5 px-3 text-right text-red-500 font-black tracking-tight whitespace-nowrap">
-                          {formatCurrency(hist.debtAmount || (Number(hist.totalCost) - Number(hist.paidAmount || 0)))}
-                        </td>
-                        <td className="min-w-[100px] whitespace-nowrap text-xs sm:text-sm py-2.5 px-3 text-center">
-                          <button onClick={() => { openPurchasePaymentModal(hist); }} className="bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-500 border border-emerald-500/30 px-3 py-1.5 rounded-lg flex items-center justify-center text-xs transition font-bold active:scale-95 w-full mx-auto cursor-pointer">
-                            <Wallet size={14} className="mr-1.5" /> Qarzni To'lash
-                          </button>
-                        </td>
-                      </tr>
-                    )})
+                    supplierDebts.map((supplier) => (
+                      <React.Fragment key={supplier.id}>
+                        <tr className="hover:bg-white/[0.02] transition bg-slate-50/30 dark:bg-slate-800/30">
+                          <td className="min-w-[100px] whitespace-nowrap text-xs sm:text-sm py-3 px-3 text-slate-900 dark:text-white font-bold">{supplier.name || 'Noma\'lum ta\'minotchi'}</td>
+                          <td className="min-w-[100px] whitespace-nowrap text-xs sm:text-sm py-3 px-3 text-slate-700 dark:text-gray-300">
+                            <button onClick={() => setExpandedSupplierId(expandedSupplierId === supplier.id ? null : supplier.id)} className="text-brand-500 hover:text-brand-600 font-semibold underline text-xs">
+                              Mahsulotlarni ko'rish ({supplier.purchases?.length || 0})
+                            </button>
+                          </td>
+                          <td className="min-w-[120px] whitespace-nowrap text-xs sm:text-sm py-3 px-3 text-right text-red-500 font-black tracking-tight">
+                            {formatCurrency(supplier.totalDebt)}
+                          </td>
+                          <td className="min-w-[100px] whitespace-nowrap text-xs sm:text-sm py-3 px-3 text-center">
+                            <button onClick={() => openSupplierPaymentModal(supplier)} className="bg-emerald-500 hover:bg-emerald-600 text-white border border-emerald-600 px-3 py-1.5 rounded-lg flex items-center justify-center text-xs transition font-bold active:scale-95 w-full mx-auto cursor-pointer shadow-md shadow-emerald-500/20">
+                              <Wallet size={14} className="mr-1.5" /> Umumiy To'lash
+                            </button>
+                          </td>
+                        </tr>
+                        {expandedSupplierId === supplier.id && supplier.purchases && supplier.purchases.length > 0 && (
+                          <tr>
+                            <td colSpan="4" className="p-0 border-b-0">
+                              <div className="bg-slate-100 dark:bg-slate-900/80 p-3 sm:p-4 rounded-b-xl border-x border-b border-slate-200 dark:border-white/5 mb-2 shadow-inner">
+                                <h4 className="text-xs font-bold text-slate-500 dark:text-gray-400 mb-2 uppercase tracking-wider">Alohida mahsulot qarzlari</h4>
+                                <div className="space-y-2">
+                                  {supplier.purchases.map(hist => (
+                                    <div key={hist.id} className="flex justify-between items-center bg-white dark:bg-slate-800 p-2 sm:p-3 rounded-lg border border-slate-200 dark:border-white/5">
+                                      <div className="flex-1">
+                                        <p className="text-xs sm:text-sm font-semibold text-slate-900 dark:text-white">
+                                          {hist.product?.name || 'Mahsulot'} <span className="text-slate-500 font-normal">({hist.addedBoxes > 0 ? `${hist.addedBoxes} quti ` : ''}{hist.addedPieces > 0 ? `${hist.addedPieces} dona` : ''})</span>
+                                        </p>
+                                        <p className="text-[10px] sm:text-xs text-red-400 font-mono mt-0.5">Qoldiq: {formatCurrency(hist.debtAmount || (Number(hist.totalCost) - Number(hist.paidAmount || 0)))}</p>
+                                      </div>
+                                      <button onClick={() => openPurchasePaymentModal(hist)} className="bg-slate-100 hover:bg-slate-200 dark:bg-slate-700 dark:hover:bg-slate-600 text-slate-700 dark:text-white px-3 py-1.5 rounded-md text-xs font-bold transition active:scale-95 whitespace-nowrap ml-2">
+                                        Qismini to'lash
+                                      </button>
+                                    </div>
+                                  ))}
+                                </div>
+                              </div>
+                            </td>
+                          </tr>
+                        )}
+                      </React.Fragment>
+                    ))
                   )}
                 </tbody>
               </table>

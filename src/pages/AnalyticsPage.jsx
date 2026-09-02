@@ -1227,9 +1227,13 @@ export const AnalyticsPage = () => {
                             {formatCurrency(supplier.totalDebt)}
                           </td>
                           <td className="min-w-[100px] whitespace-nowrap text-xs sm:text-sm py-3 px-3 text-center">
-                            <button onClick={() => openSupplierPaymentModal(supplier)} className="bg-emerald-500 hover:bg-emerald-600 text-white border border-emerald-600 px-3 py-1.5 rounded-lg flex items-center justify-center text-xs transition font-bold active:scale-95 w-full mx-auto cursor-pointer shadow-md shadow-emerald-500/20">
-                              <Wallet size={14} className="mr-1.5" /> Umumiy To'lash
-                            </button>
+                            {supplier.id !== 'unknown-supplier-id' ? (
+                              <button onClick={() => openSupplierPaymentModal(supplier)} className="bg-emerald-500 hover:bg-emerald-600 text-white border border-emerald-600 px-3 py-1.5 rounded-lg flex items-center justify-center text-xs transition font-bold active:scale-95 w-full mx-auto cursor-pointer shadow-md shadow-emerald-500/20">
+                                <Wallet size={14} className="mr-1.5" /> Umumiy To'lash
+                              </button>
+                            ) : (
+                              <span className="text-slate-400 text-xs italic">Alohida to'lang</span>
+                            )}
                           </td>
                         </tr>
                         {expandedSupplierId === supplier.id && supplier.purchases && supplier.purchases.length > 0 && (

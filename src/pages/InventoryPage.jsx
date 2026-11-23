@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useProducts } from '../hooks/useProducts';
 import api from '../services/api';
-import { formatNumberWithSpaces, parseNumberFromSpaces, getImageUrl, fallbackImage } from '../utils/format';
+import { formatNumberWithSpaces, parseNumberFromSpaces, formatMoney, getImageUrl, fallbackImage } from '../utils/format';
 
 import { Search, Plus, Tag, Box, AlertTriangle, Layers, X, ClipboardList, Trash2, Pencil, DollarSign, History, Wallet } from 'lucide-react';
 import toast from 'react-hot-toast';

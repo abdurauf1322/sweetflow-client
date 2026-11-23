@@ -3,7 +3,7 @@ import { useProducts } from '../hooks/useProducts';
 import api from '../services/api';
 import { formatNumberWithSpaces, parseNumberFromSpaces, getImageUrl, fallbackImage } from '../utils/format';
 
-import { Search, Plus, Tag, Box, AlertTriangle, Layers, X, ClipboardList, Trash2, Pencil, DollarSign, History } from 'lucide-react';
+import { Search, Plus, Tag, Box, AlertTriangle, Layers, X, ClipboardList, Trash2, Pencil, DollarSign, History, Wallet } from 'lucide-react';
 import toast from 'react-hot-toast';
 import imageCompression from 'browser-image-compression';
 import heic2any from 'heic2any';
@@ -452,6 +452,16 @@ export const InventoryPage = () => {
   // Filter low stock products
   const lowStockProducts = products.filter(p => p.stockCount <= p.minStockLimit);
 
+  // Total inventory cost value
+  const totalCostValue = products.reduce((acc, p) => {
+    const stock = Number(p.stockCount) || 0;
+    const cost = Number(p.costPrice) || 0;
+    if (stock > 0 && cost > 0) {
+      return acc + (stock * cost);
+    }
+    return acc;
+  }, 0);
+
   // Filtered products list based on active tab and search query
   const displayedProducts = (activeTab === 'all' ? products : lowStockProducts).filter(product =>
     product.name.toLowerCase().includes(searchQuery.toLowerCase())
@@ -460,7 +470,7 @@ export const InventoryPage = () => {
   return (
     <div className="space-y-4 sm:space-y-6 h-full flex flex-col p-2 sm:p-4">
       {/* Top statistics summary cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         <div className="glass-panel rounded-2xl p-4 sm:p-5 border border-slate-200 dark:border-white/5 flex items-center space-x-3 sm:space-x-4">
           <div className="bg-brand-500/10 p-2.5 sm:p-3 rounded-xl text-brand-400 shrink-0">
             <ClipboardList size={22} />
@@ -483,7 +493,7 @@ export const InventoryPage = () => {
           </div>
         </div>
 
-        <div className={`glass-panel rounded-2xl p-4 sm:p-5 border flex items-center space-x-3 sm:space-x-4 sm:col-span-2 lg:col-span-1 ${
+        <div className={`glass-panel rounded-2xl p-4 sm:p-5 border flex items-center space-x-3 sm:space-x-4 ${
           lowStockProducts.length > 0 ? 'border-yellow-500/20 bg-yellow-950/5' : 'border-slate-200 dark:border-white/5'
         }`}>
           <div className={`p-2.5 sm:p-3 rounded-xl shrink-0 ${lowStockProducts.length > 0 ? 'bg-yellow-500/10 text-yellow-400' : 'bg-gray-500/10 text-slate-500 dark:text-gray-400'}`}>
@@ -493,6 +503,18 @@ export const InventoryPage = () => {
             <div className="text-[10px] sm:text-xs text-slate-500 dark:text-gray-400 uppercase tracking-wider font-semibold">Kam qolgan mahsulotlar</div>
             <div className={`text-lg sm:text-xl font-bold mt-0.5 ${lowStockProducts.length > 0 ? 'text-yellow-400' : 'text-slate-900 dark:text-white'}`}>
               {lowStockProducts.length} xil
+            </div>
+          </div>
+        </div>
+
+        <div className="glass-panel rounded-2xl p-4 sm:p-5 border border-slate-200 dark:border-white/5 flex items-center space-x-3 sm:space-x-4">
+          <div className="bg-purple-500/10 p-2.5 sm:p-3 rounded-xl text-purple-400 shrink-0">
+            <Wallet size={22} />
+          </div>
+          <div>
+            <div className="text-[10px] sm:text-xs text-slate-500 dark:text-gray-400 uppercase tracking-wider font-semibold">Umumiy tannarx</div>
+            <div className="text-lg sm:text-xl font-bold text-purple-400 mt-0.5">
+              {formatMoney(totalCostValue)} so'm
             </div>
           </div>
         </div>
